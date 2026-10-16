@@ -1,0 +1,27 @@
+appId: app.teralynk.admin
+productName: Teralynk Admin
+copyright: Copyright © 2025 Teralynk
+directories:
+  output: release
+  buildResources: build
+files:
+  - dist/**/*
+  - dist-electron/**/*
+  - package.json
+asar: true
+win:
+  target:
+    - target: nsis
+      arch: [x64]
+  icon: build/icon.png
+  artifactName: TeralynkAdmin-Setup-${version}.${ext}
+nsis:
+  oneClick: false
+  perMachine: false
+  allowToChangeInstallationDirectory: true
+  deleteAppDataOnUninstall: false
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+  shortcutName: Teralynk Admin
+# Pas de section publish : Teralynk Admin n'est JAMAIS mélangé aux fichiers
+# de publication de l'application utilisateur (exigence de séparation).

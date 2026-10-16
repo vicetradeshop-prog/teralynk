@@ -1,0 +1,13 @@
+Teralynk — livraison source v1.1.0
+Date            : 2026-10-16T22:43:27.598Z
+Node            : v20.20.2
+Fichiers livrés : 114
+
+Vérifications exécutées avant production de ce ZIP :
+  [OK] npm run typecheck        (TypeScript strict, 3 packages)
+  [OK] npx vitest run           (suite de tests automatisés)
+  [OK] build @teralynk/app      (renderer + processus Electron)
+  [OK] build @teralynk/admin    (renderer + processus Electron)
+
+Intégrité : SHA256SUMS.txt liste l’empreinte de chaque fichier livré.
+Aucune clé privée, aucun jeton, aucun node_modules, aucun build dans cette archive.

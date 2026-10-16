@@ -1,0 +1,165 @@
+/* ==================================================================
+   Styles spécifiques à Teralynk Admin (au-delà du design system partagé).
+   ================================================================== */
+
+.admin-login {
+  position: relative;
+  z-index: 1;
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+}
+
+.admin-login-card {
+  width: min(480px, 100%);
+  padding: 40px 36px;
+  border-radius: var(--tl-radius-xl);
+  background: linear-gradient(180deg, rgba(28, 30, 44, 0.88), rgba(13, 14, 22, 0.95));
+  border: 1px solid var(--tl-line-strong);
+  box-shadow: var(--tl-shadow-lg), 0 0 90px rgba(109, 40, 217, 0.12);
+}
+
+.admin-login-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 28px;
+}
+.admin-login-brand .mark {
+  width: 44px; height: 44px;
+  border-radius: 12px;
+  display: grid; place-items: center;
+  background: var(--tl-accent-gradient);
+  color: #fff;
+  box-shadow: 0 6px 22px var(--tl-violet-glow), inset 0 1px 0 rgba(255,255,255,0.25);
+}
+.admin-login-brand h1 { font-size: 22px; font-weight: 700; letter-spacing: -0.02em; }
+.admin-login-brand p { font-size: var(--tl-text-xs); color: var(--tl-text-faint); text-transform: uppercase; letter-spacing: 0.12em; }
+
+.admin-token-state {
+  display: flex; align-items: center; gap: 10px;
+  padding: 12px 14px;
+  border-radius: var(--tl-radius-md);
+  border: 1px solid rgba(52, 211, 153, 0.35);
+  background: rgba(52, 211, 153, 0.07);
+  font-size: var(--tl-text-sm);
+  margin-bottom: 16px;
+}
+
+/* Tableaux admin */
+.admin-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--tl-text-sm);
+}
+.admin-table th {
+  text-align: left;
+  padding: 10px 12px;
+  color: var(--tl-text-faint);
+  font-size: var(--tl-text-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  border-bottom: 1px solid var(--tl-line-strong);
+}
+.admin-table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--tl-line);
+  vertical-align: middle;
+}
+.admin-table tr:hover td { background: rgba(255, 255, 255, 0.025); }
+.admin-table .row-actions { display: flex; gap: 6px; justify-content: flex-end; }
+
+/* Wizard de publication */
+.wizard-steps {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 24px;
+}
+.wizard-step {
+  flex: 1;
+  padding: 10px 8px;
+  text-align: center;
+  font-size: var(--tl-text-xs);
+  color: var(--tl-text-faint);
+  border-radius: var(--tl-radius-sm);
+  border: 1px solid var(--tl-line);
+  background: rgba(255,255,255,0.02);
+  transition: all var(--tl-dur-base) var(--tl-ease);
+}
+.wizard-step.is-active {
+  color: #fff;
+  border-color: rgba(139, 92, 246, 0.6);
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.25), rgba(14, 165, 233, 0.12));
+  box-shadow: 0 0 18px rgba(139, 92, 246, 0.18);
+}
+.wizard-step.is-done { color: var(--tl-success); border-color: rgba(52, 211, 153, 0.35); }
+
+.wizard-drop {
+  border: 1.5px dashed var(--tl-line-strong);
+  border-radius: var(--tl-radius-lg);
+  padding: 36px 24px;
+  text-align: center;
+  color: var(--tl-text-dim);
+  background: rgba(255,255,255,0.02);
+  transition: border-color var(--tl-dur-base), background var(--tl-dur-base);
+}
+.wizard-drop:hover { border-color: rgba(139, 92, 246, 0.5); background: rgba(139, 92, 246, 0.04); }
+.wizard-file {
+  display: flex; align-items: center; gap: 14px;
+  padding: 16px 18px;
+  border-radius: var(--tl-radius-md);
+  border: 1px solid rgba(139, 92, 246, 0.35);
+  background: rgba(139, 92, 246, 0.06);
+}
+.wizard-file .icon {
+  width: 42px; height: 42px; flex: none;
+  border-radius: 10px;
+  display: grid; place-items: center;
+  background: var(--tl-accent-gradient);
+  color: #fff;
+}
+
+/* Étapes de publication en direct */
+.publish-step {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 12px;
+  border-radius: var(--tl-radius-sm);
+  font-size: var(--tl-text-sm);
+  color: var(--tl-text-faint);
+  border: 1px solid transparent;
+}
+.publish-step.is-active {
+  color: var(--tl-text);
+  border-color: rgba(139, 92, 246, 0.4);
+  background: rgba(139, 92, 246, 0.07);
+}
+.publish-step.is-done { color: var(--tl-success); }
+.publish-step.is-failed { color: var(--tl-danger); }
+.publish-step .num {
+  width: 22px; height: 22px; flex: none;
+  border-radius: 50%;
+  display: grid; place-items: center;
+  font: 600 10px var(--tl-font-mono);
+  border: 1px solid currentColor;
+}
+
+/* Éditeur de formulaire en 2 colonnes */
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0 16px;
+}
+.form-grid .full { grid-column: 1 / -1; }
+
+/* Statut d'opération */
+.op-status {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: var(--tl-text-xs);
+  padding: 3px 10px;
+  border-radius: 999px;
+}
+.op-status.pending { color: var(--tl-text-faint); background: rgba(255,255,255,0.04); }
+.op-status.running { color: var(--tl-blue); background: rgba(56,189,248,0.08); }
+.op-status.success { color: var(--tl-success); background: rgba(52,211,153,0.08); }
+.op-status.failed { color: var(--tl-danger); background: rgba(248,113,113,0.08); }

@@ -1,0 +1,28 @@
+{
+  "name": "teralynk-monorepo",
+  "version": "1.1.0",
+  "private": true,
+  "description": "Teralynk — application desktop premium distribuée via GitHub, et son panel d'administration indépendant.",
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "devDependencies": {
+    "@types/yazl": "^3.3.1",
+    "typescript": "^5.5.4",
+    "vitest": "^2.0.5",
+    "yazl": "^3.3.1"
+  },
+  "scripts": {
+    "dev:app": "npm run dev -w @teralynk/app",
+    "dev:admin": "npm run dev -w @teralynk/admin",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "build": "npm run build -w @teralynk/app && npm run build -w @teralynk/admin",
+    "dist:app": "npm run build -w @teralynk/app && npm run dist -w @teralynk/app",
+    "dist:admin": "npm run build -w @teralynk/admin && npm run dist -w @teralynk/admin",
+    "gen:keys": "node scripts/generate-signing-keys.mjs",
+    "postinstall": "node scripts/ensure-electron.mjs"
+  }
+}

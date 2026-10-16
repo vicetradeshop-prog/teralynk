@@ -1,0 +1,34 @@
+appId: app.teralynk.desktop
+productName: Teralynk
+copyright: Copyright © 2025 Teralynk
+directories:
+  output: release
+  buildResources: build
+files:
+  - dist/**/*
+  - dist-electron/**/*
+  - package.json
+extraResources:
+  - from: electron/signing-public-key.pem
+    to: signing-public-key.pem
+asar: true
+win:
+  target:
+    - target: nsis
+      arch: [x64]
+  icon: build/icon.png
+  artifactName: Teralynk-Setup-${version}.${ext}
+nsis:
+  oneClick: false
+  perMachine: false
+  allowToChangeInstallationDirectory: true
+  deleteAppDataOnUninstall: false
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+  shortcutName: Teralynk
+# Échafaudage packaging uniquement (génère app-update.yml) : le flux réel est
+# forcé à l'exécution depuis REMOTE_CONFIG (packages/shared/src/config.ts).
+publish:
+  provider: github
+  owner: vicetradeshop-prog
+  repo: teralynk

@@ -1,0 +1,12 @@
+{
+  "name": "@teralynk/ui-styles",
+  "version": "1.1.0",
+  "private": true,
+  "description": "Design system CSS centralisé de Teralynk (partagé par l'application et l'admin).",
+  "exports": {
+    "./design-system.css": "./design-system.css",
+    "./components.css": "./components.css",
+    "./layout.css": "./layout.css",
+    "./boot.css": "./boot.css"
+  }
+}

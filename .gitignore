@@ -1,0 +1,18 @@
+# Dépendances et builds
+node_modules/
+dist/
+dist-electron/
+release/
+*.tsbuildinfo
+
+# SECRETS — ne jamais committer
+keys/
+*.pem
+!apps/teralynk/electron/signing-public-key.pem
+
+# Paquets de publication (trop lourds pour Git : ils vivent dans les Releases)
+/teralynk-*.zip
+
+# Données locales
+.teralynk-local/
+*.log
