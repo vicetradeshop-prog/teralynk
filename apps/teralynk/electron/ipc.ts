@@ -15,6 +15,7 @@ import { runUpdateGate, downloadAndInstallUpdate, quitAndInstall } from './servi
 import { detectRuntimes } from './services/scripts/runtimes';
 import { prepareScript, executePrepared, stopRun } from './services/scripts/executor';
 import { fetchPollResults, castGithubVote, storeUserGithubToken, clearUserGithubToken, userTokenStatus } from './services/polls';
+import { musicStatus, installSpotdl, pickFolder, downloadMusic, stopMusic, defaultMusicFolder } from './services/music/spotdl';
 import { loadPrefs, savePrefs, resetPrefs, type Prefs } from './services/prefs';
 import { checkGitHubReachable } from './services/net';
 import { logsDirectory, log } from './services/logger';

@@ -59,9 +59,14 @@
 }
 .tl-nav-item svg { width: 17px; height: 17px; flex: none; opacity: 0.85; }
 .tl-nav-item:hover { color: var(--tl-text); background: rgba(255, 255, 255, 0.05); }
-.tl-nav-item.is-active {
-  color: #fff;
+.tl-nav-item.is-active { color: #fff; }
+.tl-nav-pill {
+  position: absolute;
+  inset: 0;
+  border-radius: 9px;
   background: var(--tl-accent-soft);
+  border: 1px solid rgba(110, 86, 248, 0.22);
+  pointer-events: none;
 }
 .tl-nav-item.is-active::before {
   content: '';

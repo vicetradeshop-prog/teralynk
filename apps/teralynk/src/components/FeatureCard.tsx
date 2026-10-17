@@ -27,9 +27,14 @@ export function statusBadgeKind(status: Card['status']): string {
   }
 }
 
+export function isCardNative(card: Card): boolean {
+  return card.enabled && card.featureUi === 'music-downloader';
+}
+
 export function isCardExecutable(card: Card): boolean {
   return (
     card.enabled &&
+    !card.featureUi &&
     Boolean(card.script) &&
     card.script?.runtime !== 'info' &&
     Boolean(card.script?.sha256) &&
@@ -120,7 +125,20 @@ export const FeatureCard = memo(function FeatureCard({ card, favorite, onOpen, o
           {card.script && card.script.runtime !== 'info' ? ` · ${card.script.runtime}` : ''}
         </span>
         <span className="tl-card-action">
-          {executable ? (
+          {isCardNative(card) ? (
+            <Button
+              variant="primary"
+              size="sm"
+              icon={<IconPlay size={12} />}
+              className="tl-btn-sheen"
+              onClick={(e) => {
+                e.stopPropagation();
+                onOpen(card);
+              }}
+            >
+              Ouvrir
+            </Button>
+          ) : executable ? (
             <Button
               variant="primary"
               size="sm"

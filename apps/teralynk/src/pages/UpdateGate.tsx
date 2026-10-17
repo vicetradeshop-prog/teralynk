@@ -105,7 +105,9 @@ export function UpdateGate({ onGatePassed }: Props) {
         animate={{ opacity: 1, y: 0, scale: 1 }}
         transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
       >
-        <div className={iconClass}>
+        <div className={`tl-gate-ring-wrap ${phase === 'checking' ? 'is-checking' : ''}`}>
+          <svg className="tl-gate-ring" viewBox="0 0 92 92" aria-hidden><circle cx="46" cy="46" r="41" /></svg>
+          <div className={iconClass}>
           <AnimatePresence mode="wait">
             {phase === 'checking' && (
               <motion.div key="checking" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
@@ -128,6 +130,7 @@ export function UpdateGate({ onGatePassed }: Props) {
               </motion.div>
             )}
           </AnimatePresence>
+          </div>
         </div>
 
         {/* ---------------- Phase : vérification en cours ---------------- */}

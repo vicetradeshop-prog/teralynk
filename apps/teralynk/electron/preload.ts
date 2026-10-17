@@ -7,7 +7,7 @@
 import { contextBridge, ipcRenderer } from 'electron';
 
 /** Écoute d'événements autorisée : canaux strictement limités. */
-const ALLOWED_EVENT_CHANNELS = ['updates:progress', 'updates:error', 'updates:downloaded', 'scripts:event'] as const;
+const ALLOWED_EVENT_CHANNELS = ['updates:progress', 'updates:error', 'updates:downloaded', 'scripts:event', 'music:event'] as const;
 type EventChannel = (typeof ALLOWED_EVENT_CHANNELS)[number];
 
 const api = {
@@ -51,6 +51,19 @@ const api = {
     tokenStatus: () => ipcRenderer.invoke('polls:token-status'),
     storeToken: (token: string) => ipcRenderer.invoke('polls:store-token', token),
     clearToken: () => ipcRenderer.invoke('polls:clear-token')
+  },
+  music: {
+    status: () => ipcRenderer.invoke('music:status'),
+    defaultFolder: () => ipcRenderer.invoke('music:default-folder'),
+    pickFolder: () => ipcRenderer.invoke('music:pick-folder'),
+    install: () => ipcRenderer.invoke('music:install', { confirmed: true }),
+    download: (url: string, folder: string) => ipcRenderer.invoke('music:download', { url, folder }),
+    stop: (runId: string) => ipcRenderer.invoke('music:stop', runId),
+    onEvent: (listener: (event: unknown) => void): (() => void) => {
+      const handler = (_e: unknown, payload: unknown) => listener(payload);
+      ipcRenderer.on('music:event', handler);
+      return () => ipcRenderer.removeListener('music:event', handler);
+    }
   },
   events: {
     /** Écoute les mises à jour (progression réelle, erreurs, téléchargement terminé). */

@@ -503,6 +503,22 @@ function CardEditor({
         </div>
       </div>
 
+      <div className="tl-field full">
+        <label className="tl-label">Interface native dédiée</label>
+        <select
+          className="tl-select"
+          value={draft.featureUi ?? ''}
+          onChange={(e) => set('featureUi', (e.target.value || undefined) as FeatureCard['featureUi'])}
+        >
+          <option value="">Aucune (carte standard / script)</option>
+          <option value="music-downloader">Téléchargeur de musique (spotdl)</option>
+        </select>
+        <span className="tl-hint">
+          Une carte avec interface native n’a pas besoin de script : l’application embarque la fonctionnalité
+          (statut « disponible » autorisé sans empreinte SHA-256).
+        </span>
+      </div>
+
       <div className="tl-divider" />
 
       <div className="tl-row" style={{ justifyContent: 'space-between', marginBottom: 12 }}>

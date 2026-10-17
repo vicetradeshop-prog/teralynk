@@ -118,6 +118,23 @@ export interface PrefsView {
   seenCardVersions: Record<string, string>;
 }
 
+export interface MusicStatusView {
+  python: boolean;
+  pythonVersion?: string;
+  spotdl: boolean;
+  ffmpeg: boolean;
+  platform: string;
+}
+
+export interface MusicEventView {
+  runId: string;
+  type: 'step' | 'line' | 'stderr' | 'error' | 'exit';
+  step?: 'link' | 'ready' | 'download' | 'convert' | 'done';
+  text?: string;
+  code?: number | null;
+  at: string;
+}
+
 export interface PollResultsView {
   pollId: string;
   mode: 'github';
@@ -156,6 +173,15 @@ declare global {
         execute(token: string, cardId: string): Promise<{ ok: boolean; runId?: string; message?: string }>;
         stop(runId: string): Promise<{ ok: boolean; message?: string }>;
         onEvent(listener: (event: RunEventPayload) => void): () => void;
+      };
+      music: {
+        status(): Promise<MusicStatusView>;
+        defaultFolder(): Promise<{ ok: boolean; folder?: string }>;
+        pickFolder(): Promise<{ ok: boolean; folder?: string; cancelled?: boolean; message?: string }>;
+        install(): Promise<{ ok: boolean; message?: string }>;
+        download(url: string, folder: string): Promise<{ ok: boolean; runId?: string; message?: string }>;
+        stop(runId: string): Promise<{ ok: boolean; message?: string }>;
+        onEvent(listener: (event: MusicEventView) => void): () => void;
       };
       polls: {
         results(poll: Poll): Promise<{ ok: boolean; results?: PollResultsView; message?: string }>;

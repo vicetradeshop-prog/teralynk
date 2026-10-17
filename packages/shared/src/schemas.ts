@@ -104,6 +104,12 @@ export const featureCardSchema = z
     knownRisks: z.array(z.string().max(500)).max(10).default([]),
     riskLevel: riskLevelSchema.default('low'),
     script: scriptSpecSchema.optional(),
+    /**
+     * Interface native embarquée dans l'application (code livré avec l'app).
+     * Une carte avec featureUi n'a PAS besoin de script : l'exécution est
+     * implémentée nativement (ex. téléchargeur de musique spotdl).
+     */
+    featureUi: z.enum(['music-downloader']).optional(),
     /** Raison de l'indisponibilité, affichée si status = unavailable/soon. */
     unavailableReason: z.string().max(500).optional(),
     releaseNotes: z.string().max(10000).optional(),
@@ -114,6 +120,7 @@ export const featureCardSchema = z
   })
   .superRefine((card, ctx) => {
     const executable = card.script && card.script.runtime !== 'info';
+    const nativeUi = Boolean(card.featureUi);
     if (executable && !card.script?.sha256) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
@@ -121,7 +128,7 @@ export const featureCardSchema = z
         message: "Une carte exécutable doit déclarer l'empreinte SHA-256 de son script"
       });
     }
-    if ((card.status === 'available' || card.status === 'new') && !executable) {
+    if ((card.status === 'available' || card.status === 'new') && !executable && !nativeUi) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         path: ['status'],

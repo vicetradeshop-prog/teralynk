@@ -58,6 +58,7 @@ const DATA = {
     releasesUrl: 'https://github.com/vicetradeshop-prog/teralynk/releases'
   },
   catalog: { ok: true, source: 'network', fetchedAt: NOW, stale: false, data: { schemaVersion: 1, generatedAt: NOW, cards: [
+    card({ id: 'spotdl-music', slug: 'spotdl-music', name: 'Téléchargeur de musique Spotify', description: 'Collez un lien Spotify : Teralynk télécharge, convertit en MP3 tagué avec pochette, dans le dossier de votre choix. Installation de spotdl intégrée.', category: 'Musique', tags: ['musique', 'spotify', 'mp3'], status: 'available', featured: true, icon: 'sparkles', featureUi: 'music-downloader', version: '1.0.0', updatedAt: '2026-10-17T09:00:00.000Z', createdAt: '2026-10-17T09:00:00.000Z' }),
     card({ id: 'net-clean', slug: 'net-clean', name: 'Nettoyage réseau avancé', description: 'Réinitialise la pile réseau Windows (Winsock, DNS, cache) et rétablit les adaptateurs sans redémarrage.', category: 'Réseau', tags: ['réseau', 'winsock', 'dns'], status: 'available', featured: true, icon: 'globe', version: '2.1.0', script: { runtime: 'powershell', url: 'https://raw.githubusercontent.com/vicetradeshop-prog/teralynk/main/scripts/net-clean.ps1', sha256: SHA }, capabilities: ['Vidage du cache DNS', 'Réinitialisation Winsock'], permissions: ['Modification des adaptateurs réseau'], updatedAt: '2026-10-12T10:00:00.000Z' }),
     card({ id: 'disk-health', slug: 'disk-health', name: 'Rapport de santé disque', description: 'Génère un rapport lisible de l’état S.M.A.R.T, de l’usure et de l’espace réel de vos volumes.', category: 'Système', tags: ['disque', 'smart'], status: 'new', icon: 'layers', version: '1.3.0', script: { runtime: 'powershell', url: 'https://raw.githubusercontent.com/vicetradeshop-prog/teralynk/main/scripts/disk.ps1', sha256: SHA }, featured: true, createdAt: '2026-10-15T10:00:00.000Z', updatedAt: '2026-10-15T10:00:00.000Z' }),
     card({ id: 'vault-backup', slug: 'vault-backup', name: 'Sauvegarde chiffrée des documents', description: 'Archive et chiffre vos dossiers choisis (AES-256) vers un emplacement local ou un disque externe.', category: 'Sécurité', tags: ['sauvegarde', 'chiffrement'], status: 'available', icon: 'shield', version: '3.0.2', script: { runtime: 'python', url: 'https://raw.githubusercontent.com/vicetradeshop-prog/teralynk/main/scripts/vault.py', sha256: SHA }, riskLevel: 'medium', permissions: ['Lecture des dossiers choisis', 'Écriture sur le disque cible'], knownRisks: ['Un mot de passe perdu rend l’archive illisible'], updatedAt: '2026-10-10T10:00:00.000Z' }),
@@ -129,6 +130,15 @@ const MOCK_FN = `(dataJson) => {
       stop: async () => ({ ok: false }),
       onEvent: () => () => undefined
     },
+    music: {
+      status: async () => ({ python: true, pythonVersion: '3.12.4', spotdl: true, ffmpeg: true, platform: 'win32' }),
+      defaultFolder: async () => ({ ok: true, folder: 'C:\\\\Users\\\\lger3\\\\Music\\\\Teralynk' }),
+      pickFolder: async () => ({ ok: true, folder: 'C:\\\\Users\\\\lger3\\\\Music\\\\Teralynk' }),
+      install: async () => ({ ok: true }),
+      download: async () => ({ ok: true, runId: 'capture' }),
+      stop: async () => ({ ok: true }),
+      onEvent: () => () => undefined
+    },
     polls: {
       results: async (poll) => ({ ok: true, results: { pollId: poll.id, mode: 'github', fetchedAt: D.now, options: poll.options.map((o, i) => ({ optionId: o.id, issueNumber: o.issueNumber || 0, plusOne: [14, 9, 5][i] || 3, totalReactions: [14, 9, 5][i] || 3, url: 'https://github.com/vicetradeshop-prog/teralynk/issues/12' })) } }),
       voteGithub: async () => ({ ok: true, message: 'Vote enregistré.' }),
@@ -189,12 +199,39 @@ await page.hover('.tl-feature-card');
 await settle(500);
 await shot('04-explore-hover');
 
-await page.click('.tl-feature-card');
+await page.evaluate(() => {
+  const cards = [...document.querySelectorAll('.tl-feature-card')];
+  const generic = cards.find((c) => (c.textContent ?? '').includes('Nettoyage réseau'));
+  (generic ?? cards[0]).click();
+});
 await page.waitForSelector('.tl-modal', { timeout: 15000 });
 await settle(800);
 await shot('05-card-detail');
 await page.keyboard.press('Escape');
-await settle(500);
+await settle(600);
+
+await page.evaluate(() => {
+  const cards = [...document.querySelectorAll('.tl-feature-card')];
+  const music = cards.find((c) => (c.textContent ?? '').includes('Téléchargeur de musique'));
+  if (!music) throw new Error('carte musique introuvable dans le rendu');
+  music.click();
+});
+try {
+  await page.waitForSelector('.tl-faq', { timeout: 8000 });
+} catch {
+  const debug = await page.evaluate(() => ({
+    modal: Boolean(document.querySelector('.tl-modal')),
+    modalText: (document.querySelector('.tl-modal')?.innerText || '').slice(0, 300),
+    faq: document.querySelectorAll('.tl-faq').length,
+    modals: document.querySelectorAll('.tl-modal').length
+  }));
+  console.log('DIAG MUSIC MODAL :', JSON.stringify(debug, null, 2));
+  throw new Error('modale musique non rendue');
+}
+await settle(1000);
+await shot('09-music');
+await page.keyboard.press('Escape');
+await settle(600);
 
 await clickText('.tl-nav-item', 'Annonces');
 await settle(1000);

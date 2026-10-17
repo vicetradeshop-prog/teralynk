@@ -8,6 +8,7 @@
  * processus principal sur la base du manifeste signé en cache).
  */
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { MotionConfig } from 'framer-motion';
 import type { Announcement, FeatureCard } from '@teralynk/shared';
 import { Shell, type PageId } from '@/components/Shell';
 import { GlobalSearch } from '@/components/GlobalSearch';
@@ -22,6 +23,7 @@ import { PollsPage } from '@/pages/PollsPage';
 import { HistoryPage } from '@/pages/HistoryPage';
 import { SettingsPage } from '@/pages/SettingsPage';
 import { CardDetailModal, RunPrepareModal } from '@/features/CardDetail';
+import { MusicDownloader } from '@/features/MusicDownloader';
 import { RunConsole } from '@/features/RunConsole';
 import { useAnnouncements, useCatalog, usePolls, usePrefs, useApplyVisualPrefs } from '@/hooks/useData';
 import { api, type PreparedScriptView, type PrefsView, type SystemInfo, type UpdateGateView } from '@/lib/api';
@@ -47,6 +49,16 @@ function AppInner() {
 
   // Carte ouverte (détails) et exécution en cours.
   const [detailCard, setDetailCard] = useState<FeatureCard | null>(null);
+  const [musicCard, setMusicCard] = useState<FeatureCard | null>(null);
+
+  // Routage d'ouverture : interface native dédiée OU fenêtre de détails générique.
+  const openCard = (card: FeatureCard) => {
+    if (card.featureUi === 'music-downloader') {
+      setMusicCard(card);
+      return;
+    }
+    setDetailCard(card);
+  };
   const [prepareCard, setPrepareCard] = useState<FeatureCard | null>(null);
   const [run, setRun] = useState<{ prepared: PreparedScriptView; card: FeatureCard } | null>(null);
   const [announcementDetail, setAnnouncementDetail] = useState<Announcement | null>(null);
@@ -159,7 +171,7 @@ function AppInner() {
             offline={Boolean(offline)}
             updateInfo={updateInfo}
             favorites={prefs?.favorites ?? []}
-            onOpenCard={setDetailCard}
+            onOpenCard={openCard}
             onToggleFavorite={(card) => void toggleFavorite(card.id)}
             onNavigate={setPage}
             onOpenAnnouncement={(a) => {
@@ -177,7 +189,7 @@ function AppInner() {
             filters={filters}
             onFiltersChange={setFilters}
             favorites={prefs?.favorites ?? []}
-            onOpenCard={setDetailCard}
+            onOpenCard={openCard}
             onToggleFavorite={(card) => void toggleFavorite(card.id)}
           />
         );
@@ -186,7 +198,7 @@ function AppInner() {
           <FavoritesPage
             catalog={catalog}
             favorites={prefs?.favorites ?? []}
-            onOpenCard={setDetailCard}
+            onOpenCard={openCard}
             onToggleFavorite={(card) => void toggleFavorite(card.id)}
             onNavigate={setPage}
           />
@@ -276,6 +288,9 @@ function AppInner() {
 
       {/* Console d'exécution */}
       {run && <RunConsole prepared={run.prepared} card={run.card} onClose={() => setRun(null)} />}
+
+      {/* Fonctionnalité native : téléchargeur de musique */}
+      {musicCard && <MusicDownloader card={musicCard} onClose={() => setMusicCard(null)} />}
     </>
   );
 }
@@ -283,7 +298,9 @@ function AppInner() {
 export default function App() {
   return (
     <ToastProvider>
-      <AppInner />
+      <MotionConfig reducedMotion="user">
+        <AppInner />
+      </MotionConfig>
     </ToastProvider>
   );
 }

@@ -65,6 +65,9 @@ export function Shell({ page, onNavigate, children, searchSlot, systemInfo, upda
 
         {entries.map((entry) => (
           <button key={entry.id} className={`tl-nav-item ${page === entry.id ? 'is-active' : ''}`} onClick={() => onNavigate(entry.id)}>
+            {page === entry.id && (
+              <motion.span layoutId="tl-nav-pill" className="tl-nav-pill" transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }} />
+            )}
             {entry.icon}
             <span>{entry.label}</span>
             {entry.badge ? <span className="tl-nav-badge">{entry.badge > 99 ? '99+' : entry.badge}</span> : null}
@@ -76,6 +79,9 @@ export function Shell({ page, onNavigate, children, searchSlot, systemInfo, upda
 
         {secondary.map((entry) => (
           <button key={entry.id} className={`tl-nav-item ${page === entry.id ? 'is-active' : ''}`} onClick={() => onNavigate(entry.id)}>
+            {page === entry.id && (
+              <motion.span layoutId="tl-nav-pill" className="tl-nav-pill" transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }} />
+            )}
             {entry.icon}
             <span>{entry.label}</span>
           </button>

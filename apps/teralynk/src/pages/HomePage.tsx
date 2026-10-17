@@ -2,7 +2,7 @@
  * Page Accueil — présentation, bannière d'annonce importante,
  * mises en avant, nouveautés et raccourcis.
  */
-import { useMemo } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import type { Announcement, CatalogManifest, FeatureCard } from '@teralynk/shared';
 import { FeatureCard as FeatureCardView } from '@/components/FeatureCard';
@@ -11,6 +11,29 @@ import { IconAlert, IconChevronRight, IconCompass, IconMegaphone, IconSparkles, 
 import type { ContentState } from '@/hooks/useData';
 import type { PageId } from '@/components/Shell';
 import type { UpdateGateView } from '@/lib/api';
+
+/** Compteur animé (rAF) — respecte la réduction de mouvement via CSS/ MotionConfig. */
+function AnimatedNumber({ value }: { value: number }) {
+  const [display, setDisplay] = useState(0);
+  const from = useRef(0);
+  useEffect(() => {
+    const start = performance.now();
+    const initial = from.current;
+    const delta = value - initial;
+    if (delta === 0) return;
+    let raf = 0;
+    const tick = (now: number) => {
+      const t = Math.min(1, (now - start) / 700);
+      const eased = 1 - Math.pow(1 - t, 3);
+      setDisplay(Math.round(initial + delta * eased));
+      if (t < 1) raf = requestAnimationFrame(tick);
+      else from.current = value;
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [value]);
+  return <b>{display}</b>;
+}
 
 interface Props {
   catalog: ContentState<CatalogManifest>;
@@ -107,10 +130,10 @@ export function HomePage({ catalog, topAnnouncement, offline, updateInfo, favori
             <span className="tl-stat">Catalogue momentanément indisponible</span>
           ) : (
             <>
-              <span className="tl-stat"><b>{cards.filter((c) => c.enabled).length}</b> fonctionnalités</span>
-              <span className="tl-stat"><b>{executableCount}</b> exécutables</span>
-              <span className="tl-stat"><b>{cards.filter((c) => c.enabled && (c.status === 'new' || Date.now() - new Date(c.createdAt).getTime() < 7 * 864e5)).length}</b> nouveautés récentes</span>
-              <span className="tl-stat"><b>{cards.filter((c) => c.featured).length}</b> mises en avant</span>
+              <span className="tl-stat"><AnimatedNumber value={cards.filter((c) => c.enabled).length} /> fonctionnalités</span>
+              <span className="tl-stat"><AnimatedNumber value={executableCount} /> exécutables</span>
+              <span className="tl-stat"><AnimatedNumber value={cards.filter((c) => c.enabled && (c.status === 'new' || Date.now() - new Date(c.createdAt).getTime() < 7 * 864e5)).length} /> nouveautés récentes</span>
+              <span className="tl-stat"><AnimatedNumber value={cards.filter((c) => c.featured).length} /> mises en avant</span>
             </>
           )}
         </div>

@@ -86,6 +86,25 @@ ne déployer aucun logiciel malveillant ; ne contourner aucune protection ; déc
 opérations sensibles dans `capabilities`/`permissions`/`knownRisks`. Toute carte mentant sur
 ses effets doit être dépubliée — l'empreinte SHA-256 lie le fichier publié à sa déclaration.
 
+## Cartes à interface native (`featureUi`)
+
+Une carte peut embarquer une **interface native** livrée avec l'application
+(champ `featureUi`), sans script distant : l'ouverture de la carte affiche
+l'expérience dédiée au lieu de la fenêtre de détails générique.
+
+- `featureUi: "music-downloader"` : téléchargeur de musique Spotify (spotdl).
+  - Prérequis détectés automatiquement : Python 3, spotdl, ffmpeg.
+  - Installation de spotdl : `pip install --user spotdl`, fenêtres masquées,
+    **uniquement après consentement explicite** (case à cocher dans l'interface).
+  - Téléchargement : `python -I -m spotdl <url> --output <dossier>` ; l'URL est
+    validée (https, domaine `*.spotify.com`, types track/album/playlist/artist)
+    et passée en argument unique, sans shell.
+  - Événements streamés vers l'UI (étapes, sortie, erreurs, code de sortie) ;
+    arrêt possible ; aucune console ne s'ouvre.
+  - FAQ intégrée (MP3, lecteur MP3, MP4, téléphone, ffmpeg, légalité).
+- Toute nouvelle interface native = modification du code de l'application
+  (donc nouvelle version), conformément à la distinction contenu/code.
+
 ## Ajouter un runtime supplémentaire
 
 L'architecture est extensible : ajouter l'identifiant dans `runtimeIdSchema`

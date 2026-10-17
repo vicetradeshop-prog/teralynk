@@ -411,3 +411,160 @@
   white-space: pre-wrap;
   word-break: break-word;
 }
+
+/* ==================================================================
+   v1.4 — Interface musique native + passe d'animations
+   ================================================================== */
+
+/* État de validité du champ lien */
+.tl-search.is-valid { border-color: rgba(52, 211, 153, 0.55); }
+.tl-search.is-valid:focus-within { box-shadow: 0 0 0 3px rgba(52, 211, 153, 0.14); }
+.tl-search.is-invalid { border-color: rgba(248, 113, 113, 0.55); }
+.tl-search.is-invalid:focus-within { box-shadow: 0 0 0 3px rgba(248, 113, 113, 0.13); }
+
+/* Égaliseur animé (icône de la fonctionnalité musique) */
+.tl-music-icon { background: linear-gradient(145deg, var(--tl-accent-soft), rgba(56, 189, 248, 0.08)); }
+.tl-eq { display: flex; align-items: flex-end; gap: 3px; height: 20px; }
+.tl-eq i {
+  width: 3.5px; border-radius: 2px;
+  background: var(--tl-accent-bright);
+  animation: tl-eq-bounce 1.05s var(--tl-ease-soft) infinite;
+}
+.tl-eq i:nth-child(1) { height: 40%; animation-delay: 0s; }
+.tl-eq i:nth-child(2) { height: 90%; animation-delay: 0.18s; }
+.tl-eq i:nth-child(3) { height: 60%; animation-delay: 0.36s; }
+.tl-eq i:nth-child(4) { height: 78%; animation-delay: 0.54s; }
+@keyframes tl-eq-bounce {
+  0%, 100% { transform: scaleY(0.45); }
+  50% { transform: scaleY(1); }
+}
+
+/* Encarts d'information musique */
+.tl-music-notice {
+  display: flex; gap: 10px; align-items: flex-start;
+  padding: 12px 14px;
+  border-radius: var(--tl-radius-md);
+  border: 1px solid rgba(110, 86, 248, 0.4);
+  background: var(--tl-accent-soft);
+  margin-bottom: 12px;
+  font-size: var(--tl-text-sm);
+}
+.tl-music-folder {
+  flex: 1; min-width: 0;
+  display: flex; align-items: center; gap: 8px;
+  padding: 9px 12px;
+  border-radius: 9px;
+  border: 1px solid var(--tl-line);
+  background: rgba(0, 0, 0, 0.25);
+  color: var(--tl-text-dim);
+  font-size: var(--tl-text-xs);
+}
+
+/* Timeline d'étapes animée */
+.tl-steps { display: flex; flex-direction: column; gap: 9px; margin: 6px 0 14px; overflow: hidden; }
+.tl-step { display: flex; align-items: center; gap: 10px; font-size: var(--tl-text-sm); color: var(--tl-text-faint); }
+.tl-step-dot {
+  width: 20px; height: 20px; flex: none;
+  border-radius: 50%;
+  display: grid; place-items: center;
+  border: 1.5px solid var(--tl-line-strong);
+  color: #fff;
+  transition: border-color var(--tl-dur-base), background var(--tl-dur-base);
+}
+.tl-step-label { transition: color var(--tl-dur-base); }
+.tl-step.is-done { color: var(--tl-text-dim); }
+.tl-step.is-done .tl-step-dot { background: var(--tl-success); border-color: var(--tl-success); }
+.tl-step.is-active { color: var(--tl-text); font-weight: 600; }
+.tl-step.is-active .tl-step-dot { border-color: var(--tl-accent); }
+.tl-step-pulse {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--tl-accent);
+  box-shadow: 0 0 0 0 var(--tl-accent-glow);
+  animation: tl-step-ping 1.4s var(--tl-ease-soft) infinite;
+}
+@keyframes tl-step-ping {
+  0% { box-shadow: 0 0 0 0 var(--tl-accent-glow); }
+  70% { box-shadow: 0 0 0 9px rgba(110, 86, 248, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(110, 86, 248, 0); }
+}
+
+/* Barre de progression animée (reflet qui balaie) */
+.tl-progress-anim {
+  width: 45%;
+  animation: tl-progress-flow 1.5s var(--tl-ease-soft) infinite;
+}
+@keyframes tl-progress-flow {
+  0% { margin-left: -45%; }
+  100% { margin-left: 100%; }
+}
+
+/* Reflet balayant sur les boutons primaires au survol */
+.tl-btn-sheen { overflow: hidden; }
+.tl-btn-sheen::after {
+  content: '';
+  position: absolute;
+  top: -60%; left: -70%;
+  width: 45%; height: 220%;
+  background: linear-gradient(100deg, transparent, rgba(255, 255, 255, 0.28), transparent);
+  transform: rotate(16deg);
+  transition: left 0.55s var(--tl-ease-soft);
+  pointer-events: none;
+}
+.tl-btn-sheen:hover::after { left: 130%; }
+
+/* FAQ accordéon */
+.tl-faq { display: flex; flex-direction: column; gap: 8px; }
+.tl-faq-item {
+  border: 1px solid var(--tl-line);
+  border-radius: var(--tl-radius-md);
+  background: rgba(255, 255, 255, 0.02);
+  overflow: hidden;
+  transition: border-color var(--tl-dur-base), background var(--tl-dur-base);
+}
+.tl-faq-item.is-open { border-color: rgba(110, 86, 248, 0.4); background: rgba(110, 86, 248, 0.05); }
+.tl-faq-q {
+  width: 100%;
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 12px 14px;
+  font: 600 var(--tl-text-sm) var(--tl-font);
+  color: var(--tl-text);
+  text-align: left;
+  cursor: pointer;
+}
+.tl-faq-q:hover { background: rgba(255, 255, 255, 0.03); }
+.tl-faq-a {
+  padding: 0 14px 13px;
+  font-size: var(--tl-text-sm);
+  color: var(--tl-text-dim);
+  line-height: 1.65;
+  white-space: pre-wrap;
+  user-select: text;
+}
+
+/* Anneau de progression du gate de mise à jour */
+.tl-gate-ring { position: absolute; inset: -7px; }
+.tl-gate-ring circle {
+  fill: none;
+  stroke: var(--tl-accent);
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-dasharray: 260;
+  stroke-dashoffset: 260;
+  animation: tl-ring-dash 1.6s var(--tl-ease-soft) infinite;
+  opacity: 0.85;
+}
+@keyframes tl-ring-dash {
+  0% { stroke-dashoffset: 260; transform: rotate(0deg); }
+  50% { stroke-dashoffset: 70; }
+  100% { stroke-dashoffset: 260; transform: rotate(360deg); }
+}
+.tl-gate-ring-wrap { position: relative; }
+.tl-gate-ring-wrap:not(.is-checking) .tl-gate-ring { display: none; }
+
+/* Micro-animations cartes : inclinaison d'icône au survol */
+.tl-feature-card:hover .tl-card-icon svg { animation: tl-icon-tilt 0.5s var(--tl-ease); }
+@keyframes tl-icon-tilt {
+  0% { transform: rotate(0) scale(1); }
+  40% { transform: rotate(-7deg) scale(1.12); }
+  100% { transform: rotate(0) scale(1); }
+}

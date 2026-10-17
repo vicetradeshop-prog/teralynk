@@ -223,6 +223,7 @@ interface ElectronAutoUpdater {
   autoInstallOnAppQuit: boolean;
   on<T>(event: string, listener: (arg: T) => void): unknown;
   setFeedURL(url: unknown): void;
+  checkForUpdates(): Promise<{ updateInfo?: unknown; cancellationToken?: unknown } | null>;
   downloadUpdate(): Promise<unknown>;
   quitAndInstall(): void;
 }
@@ -287,6 +288,16 @@ export async function downloadAndInstallUpdate(window: BrowserWindow): Promise<{
       });
     }
 
+    // electron-updater exige un checkForUpdates() préalable : sans lui,
+    // downloadUpdate() rejette « Check for updates first ». Le gate a déjà
+    // décidé via le manifeste signé ; ce check aligne le provider GitHub.
+    const checkResult = await autoUpdater.checkForUpdates();
+    if (!checkResult || !checkResult.updateInfo) {
+      return {
+        started: false,
+        error: 'Le mécanisme d’installation ne trouve pas de mise à jour correspondant au manifeste signé vérifié. Utilisez la page officielle des versions.'
+      };
+    }
     await autoUpdater.downloadUpdate();
     return { started: true };
   } catch (error) {
