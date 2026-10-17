@@ -28,6 +28,15 @@ contourne jamais : l'écran de vérification s'enchaîne systématiquement.
   la release ; la progression affichée provient des événements réels d'electron-updater
   (`download-progress`), jamais d'une animation. Après téléchargement vérifié :
   « Installer et redémarrer » → `quitAndInstall()` → la vérification recommence au lancement.
+- **Fiabilité du redémarrage (v1.5.0)** : une instance **unique** d'electron-updater est
+  mémorisée pour toute la session (le téléchargement et l'installation utilisent la même —
+  auparavant un ré-import du module pouvait viser une instance non initialisée et le clic
+  ne faisait rien). L'événement IPC `updates:installing` n'est émis que lorsque
+  electron-updater confirme le départ (`before-quit-for-update`) : l'écran
+  « Redémarrage de Teralynk… » correspond à un état RÉEL. Un watchdog double la tentative
+  à 12 s puis, à 20 s sans départ, ramène l'UI à un état actionnable (réessayer, fermer
+  pour installer à la fermeture — `autoInstallOnAppQuit` —, ou page des versions).
+  Plus aucun écran figé annonçant un redémarrage imaginaire.
 - **Mode développement** : l'installation automatique est indisponible ; l'écran le dit et
   propose la page des releases. Ce n'est pas une fausse fonctionnalité : c'est une limite
   réelle d'electron-updater hors paquet signé/emballé.

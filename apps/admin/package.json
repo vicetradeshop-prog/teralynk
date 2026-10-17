@@ -1,7 +1,7 @@
 {
   "name": "@teralynk/admin",
   "productName": "Teralynk Admin",
-  "version": "1.4.1",
+  "version": "1.5.0",
   "private": true,
   "description": "Teralynk Admin — panel de publication indépendant : catalogue, annonces, sondages et releases GitHub.",
   "main": "dist-electron/main.js",

@@ -1,16 +1,27 @@
 /**
  * Interface native « Téléchargeur de musique » (carte featureUi music-downloader).
  *
- * Expérience : étapes animées en direct (événements réels du processus),
- * installation autonome de spotdl APRÈS consentement, choix du dossier via la
- * boîte de dialogue système, journal repliable, arrêt possible, et FAQ
- * complète (MP3, lecteur MP3, MP4, téléphone, ffmpeg, légalité).
+ * v1.5.0 — refonte complète :
+ *  - PANNEAU DÉPENDANCES : trois cartes animées (Python, spotdl, ffmpeg) avec
+ *    statut réel et BOUTON D'INSTALLATION OBLIGATOIRE : rien n'est installé
+ *    sans un clic volontaire de l'utilisateur (consentement explicite).
+ *    ffmpeg s'installe désormais en automatique (build statique officiel,
+ *    progression réelle) au lieu d'une simple consigne manuelle.
+ *  - BOUTONS DOSSIER RÉPARÉS : « Dossier… » (vraie boîte de dialogue système)
+ *    et « Ouvrir le dossier » (Explorateur Windows) fonctionnent réellement
+ *    (les canaux IPC correspondants existent désormais côté processus principal).
+ *  - ANIMATIONS : scène de fond animée (orbes, notes flottantes), égaliseur,
+ *    étapes spring, barre de progression scintillante, célébration finale
+ *    avec confettis, journal en direct repliable.
+ *  - FAQ complète conservée (MP3, lecteur MP3, MP4, téléphone, ffmpeg, légalité).
  */
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { validateSpotifyUrl, type FeatureCard } from '@teralynk/shared';
 import { Modal, Button, Badge } from '@/components/ui';
-import { IconAlert, IconCheck, IconDownload, IconExternal, IconFolder, IconRefresh, IconStop, IconX } from '@/components/Icons';
+import {
+  IconAlert, IconCheck, IconDownload, IconExternal, IconFolder, IconRefresh, IconStop, IconTerminal, IconWrench, IconX
+} from '@/components/Icons';
 import { api, type MusicEventView, type MusicStatusView } from '@/lib/api';
 import { useToast } from '@/components/Toasts';
 
@@ -27,7 +38,8 @@ const FAQ: Array<{ q: string; a: string }> = [
     q: 'Où sont enregistrées mes musiques ?',
     a:
       'Dans le dossier affiché sous le champ de lien (par défaut : Musique\\Teralynk). Changez-le à tout moment avec le bouton « Dossier… » : ' +
-      'le choix est mémorisé pour la session et chaque téléchargement y dépose un fichier .mp3 nommé « Artiste - Titre ».'
+      'le choix est mémorisé pour la session et chaque téléchargement y dépose un fichier .mp3 nommé « Artiste - Titre ». ' +
+      'Le bouton « Ouvrir le dossier » y amène directement l’Explorateur de fichiers.'
   },
   {
     q: 'Quel format et quelle qualité ?',
@@ -38,9 +50,9 @@ const FAQ: Array<{ q: string; a: string }> = [
   {
     q: 'Comment mettre les musiques sur un lecteur MP3 ou une clé USB ?',
     a:
-      '1) Ouvrez l’Explorateur de fichiers et allez dans votre dossier de destination (bouton « Ouvrir le dossier » après un téléchargement).\n' +
+      '1) Cliquez sur « Ouvrir le dossier » après un téléchargement (ou ouvrez votre dossier de destination).\n' +
       '2) Sélectionnez les fichiers .mp3 (Ctrl+clic pour plusieurs).\n' +
-      '3) Copiez-les (Ctrl+C), branchez votre lecteur/clé, puis collez (Ctrl+V) dans son dossier musique.\n' +
+      '3) Copiez-les (Ctrl+C), branchez votre lecteur/clé, puis collez-les (Ctrl+V) dans son dossier musique.\n' +
       '4) Éjectez proprement le périphérique. Les tags et pochettes sont conservés.'
   },
   {
@@ -59,11 +71,12 @@ const FAQ: Array<{ q: string; a: string }> = [
       'ou importez-les dans une app de lecture compatible (VLC, Foobar2000).'
   },
   {
-    q: 'Pourquoi ffmpeg est-il requis, et comment l’installer ?',
+    q: 'Comment ffmpeg est-il installé par Teralynk ?',
     a:
-      'ffmpeg réalise l’encodage MP3 et l’incrustation des tags. Installation en 1 minute :\n' +
-      '— Windows : winget install Gyan.FFmpeg (ou téléchargez le build « essentials » sur ffmpeg.org, dézippez, ajoutez le dossier bin au PATH).\n' +
-      '— Ensuite redémarrez Teralynk : la puce « ffmpeg » passe au vert automatiquement.'
+      'Le bouton « Installer ffmpeg » télécharge le build statique officiel publié sur les releases GitHub BtbN/FFmpeg-Builds, ' +
+      'le décompresse dans un dossier local géré (%LOCALAPPDATA%\\Teralynk\\tools) et l’utilise automatiquement pour spotdl. ' +
+      'Rien n’est modifié dans Windows : pas de registre, pas de PATH système, pas de privilèges administrateur. ' +
+      'Préférence manuelle : winget install Gyan.FFmpeg fonctionne aussi (dans ce cas Teralynk détecte le ffmpeg système).'
   },
   {
     q: 'Puis-je télécharger un album ou une playlist entière ?',
@@ -92,6 +105,8 @@ interface Props {
   onClose: () => void;
 }
 
+type DepKind = 'spotdl' | 'ffmpeg';
+
 export function MusicDownloader({ card, onClose }: Props) {
   const toast = useToast();
   const [status, setStatus] = useState<MusicStatusView | null>(null);
@@ -99,7 +114,8 @@ export function MusicDownloader({ card, onClose }: Props) {
   const [url, setUrl] = useState('');
   const [folder, setFolder] = useState<string | null>(null);
   const [consent, setConsent] = useState(false);
-  const [installing, setInstalling] = useState(false);
+  const [depInstall, setDepInstall] = useState<DepKind | null>(null);
+  const [depProgress, setDepProgress] = useState<number | null>(null);
   const [runId, setRunId] = useState<string | null>(null);
   const [running, setRunning] = useState(false);
   const [stepIndex, setStepIndex] = useState(-1);
@@ -108,8 +124,10 @@ export function MusicDownloader({ card, onClose }: Props) {
   const [error, setError] = useState<string | null>(null);
   const [elapsed, setElapsed] = useState(0);
   const [openFaq, setOpenFaq] = useState<number | null>(0);
+  const [openingFolder, setOpeningFolder] = useState(false);
   const startedAt = useRef<number | null>(null);
   const runIdRef = useRef<string | null>(null);
+  const depRunIdRef = useRef<string | null>(null);
 
   const urlCheck = useMemo(() => validateSpotifyUrl(url), [url]);
 
@@ -132,10 +150,43 @@ export function MusicDownloader({ card, onClose }: Props) {
     return () => clearInterval(timer);
   }, [running]);
 
-  // Écoute des événements réels du processus
+  // Écoute des événements RÉELS du processus (installations + téléchargement)
   useEffect(() => {
     const unsubscribe = api!.music.onEvent((raw: MusicEventView) => {
-      if (runIdRef.current && raw.runId !== runIdRef.current) return;
+      /* ---- Branche dépendances : installation spotdl/ffmpeg en cours ---- */
+      if (depInstall || (depRunIdRef.current !== null && raw.runId === depRunIdRef.current)) {
+        depRunIdRef.current = raw.runId;
+        if (raw.type === 'progress') {
+          if (typeof raw.percent === 'number') setDepProgress(raw.percent);
+          if (raw.text) setLines((prev) => [...prev.slice(-400), raw.text ?? '']);
+          return;
+        }
+        if (raw.type === 'line' || raw.type === 'stderr') {
+          setLines((prev) => [...prev.slice(-400), raw.text ?? '']);
+          return;
+        }
+        if (raw.type === 'step' && raw.text) {
+          setLines((prev) => [...prev.slice(-400), `• ${raw.text}`]);
+          return;
+        }
+        if (raw.type === 'error') {
+          setError(raw.text ?? 'Erreur inconnue.');
+          return;
+        }
+        if (raw.type === 'exit') {
+          if (raw.code === 0) {
+            toast.push('success', depInstall === 'ffmpeg' ? 'ffmpeg installé : il sera utilisé automatiquement.' : 'spotdl installé avec succès.');
+          }
+          setDepInstall(null);
+          setDepProgress(null);
+          depRunIdRef.current = null;
+          void refreshStatus();
+        }
+        return;
+      }
+
+      /* ---- Branche téléchargement de musique ---- */
+      if (runIdRef.current !== null && raw.runId !== runIdRef.current) return;
       if (raw.type === 'step' && raw.step) {
         const idx = STEPS.findIndex((s) => s.id === raw.step);
         setStepIndex((prev) => Math.max(prev, idx));
@@ -160,18 +211,31 @@ export function MusicDownloader({ card, onClose }: Props) {
       }
     });
     return unsubscribe;
-  }, [toast]);
+  }, [toast, depInstall, refreshStatus]);
 
-  const install = async () => {
-    setInstalling(true);
+  const installDep = async (kind: DepKind) => {
     setError(null);
-    const result = await api!.music.install();
-    setInstalling(false);
-    if (result.ok) {
-      toast.push('success', 'spotdl installé avec succès.');
-      await refreshStatus();
-    } else {
+    setLines([]);
+    setDepProgress(null);
+    setShowLog(true);
+    setDepInstall(kind);
+    const result = kind === 'spotdl' ? await api!.music.install() : await api!.music.installFfmpeg();
+    if (!result.ok) {
+      setDepInstall(null);
+      setDepProgress(null);
       setError(result.message ?? 'Installation impossible.');
+    }
+    // En cas de succès, l'événement 'exit' ci-dessus rafraîchit le statut.
+  };
+
+  const openDestinationFolder = async (target?: string | null) => {
+    const dest = target ?? folder;
+    if (!dest) return;
+    setOpeningFolder(true);
+    const result = await api!.music.openFolder(dest);
+    setOpeningFolder(false);
+    if (!result.ok) {
+      toast.push('error', result.message ?? 'Ouverture du dossier impossible.');
     }
   };
 
@@ -195,19 +259,28 @@ export function MusicDownloader({ card, onClose }: Props) {
   };
 
   const stop = async () => {
-    if (!runIdRef.current) return;
-    await api!.music.stop(runIdRef.current);
-    setRunning(false);
-    toast.push('info', 'Téléchargement arrêté.');
+    if (runIdRef.current) {
+      await api!.music.stop(runIdRef.current);
+      setRunning(false);
+      toast.push('info', 'Téléchargement arrêté.');
+      return;
+    }
+    if (depRunIdRef.current) {
+      await api!.music.stop(depRunIdRef.current);
+      setDepInstall(null);
+      setDepProgress(null);
+      toast.push('info', 'Installation arrêtée.');
+    }
   };
 
-  const missingSpotdl = status && !status.spotdl;
-  const canStart = Boolean(urlCheck.ok && folder && status?.python && status?.spotdl && status?.ffmpeg && !running);
+  const envReady = Boolean(status?.python && status?.spotdl && status?.ffmpeg);
+  const succeeded = !running && stepIndex >= STEPS.length - 1;
+  const canStart = Boolean(urlCheck.ok && folder && envReady && !running && !depInstall);
 
   return (
     <Modal
       open
-      onClose={running ? () => undefined : onClose}
+      onClose={running || depInstall ? () => undefined : onClose}
       title={card.name}
       subtitle={card.description}
       icon={
@@ -222,7 +295,7 @@ export function MusicDownloader({ card, onClose }: Props) {
           <Button variant="ghost" size="sm" onClick={() => setShowLog((v) => !v)}>
             {showLog ? 'Masquer le journal' : 'Voir le journal'}
           </Button>
-          {running ? (
+          {running || depInstall ? (
             <Button variant="danger" icon={<IconStop size={13} />} onClick={stop}>Arrêter</Button>
           ) : (
             <Button variant="ghost" onClick={onClose}>Fermer</Button>
@@ -240,50 +313,121 @@ export function MusicDownloader({ card, onClose }: Props) {
         </>
       }
     >
-      {/* ---- État de l'environnement ---- */}
-      <div className="tl-row" style={{ gap: 8, flexWrap: 'wrap', marginBottom: 16 }}>
-        <Badge kind={status?.python ? 'available' : 'unavailable'}>Python {status?.pythonVersion ?? ''}</Badge>
-        <Badge kind={status?.spotdl ? 'available' : 'soon'}>spotdl</Badge>
-        <Badge kind={status?.ffmpeg ? 'available' : 'soon'}>ffmpeg</Badge>
-        <Button variant="ghost" size="sm" icon={<IconRefresh size={13} />} loading={checking} onClick={refreshStatus} aria-label="Revérifier" />
-        <span className="tl-faint" style={{ fontSize: 'var(--tl-text-xs)', marginLeft: 'auto' }}>
-          {status?.python && status.spotdl && status.ffmpeg ? 'Environnement prêt' : 'Complétez l’environnement ci-dessous'}
+      {/* ---- Scène animée de fond ---- */}
+      <div className="tl-music-stage" aria-hidden>
+        <span className="tl-music-orb" /><span className="tl-music-orb" /><span className="tl-music-orb" />
+        <span className="tl-music-note">♪</span>
+        <span className="tl-music-note">♫</span>
+        <span className="tl-music-note">♩</span>
+      </div>
+
+      {/* ---- Dépendances : installation OBLIGATOIREMENT manuelle (clic) ---- */}
+      <div className="tl-section-head" style={{ marginBottom: 8 }}>
+        <h3 style={{ fontSize: 'var(--tl-text-base)', fontWeight: 650 }}>Dépendances requises</h3>
+        <span className="tl-row" style={{ gap: 8 }}>
+          <Badge kind={envReady ? 'available' : 'soon'}>{envReady ? 'Environnement prêt' : 'À compléter'}</Badge>
+          <Button variant="ghost" size="sm" icon={<IconRefresh size={13} />} loading={checking} onClick={refreshStatus} aria-label="Revérifier l’environnement" />
         </span>
       </div>
 
-      {missingSpotdl && (
-        <motion.div className="tl-music-notice" initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }}>
-          <IconDownload size={15} style={{ flex: 'none', marginTop: 2, color: 'var(--tl-accent-bright)' }} />
-          <div style={{ flex: 1 }}>
-            <b>spotdl n’est pas encore installé.</b>
-            <div className="tl-faint" style={{ fontSize: 'var(--tl-text-xs)', marginTop: 2 }}>
-              Installation automatique via pip (dépôt officiel PyPI, sans privilèges administrateur, fenêtre masquée).
-            </div>
-            <label className="tl-row" style={{ gap: 8, marginTop: 8, cursor: 'pointer', fontSize: 'var(--tl-text-sm)' }}>
-              <input type="checkbox" checked={consent} onChange={(e) => setConsent(e.target.checked)} />
-              J’autorise Teralynk à installer spotdl maintenant
-            </label>
+      <div className="tl-dep-grid">
+        {/* -------- Python -------- */}
+        <motion.div
+          className={`tl-dep-card ${status?.python ? 'is-ready' : 'is-missing'}`}
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3, delay: 0.02 }}
+        >
+          <div className="tl-dep-head">
+            <span className="tl-dep-ico"><IconTerminal size={16} /></span>
+            <b>Python 3</b>
+            <span className={`tl-dep-dot ${status?.python ? 'is-ok' : status ? 'is-off' : 'is-wait'}`} />
           </div>
-          <Button variant="secondary" size="sm" disabled={!consent} loading={installing} onClick={install}>
-            Installer
-          </Button>
+          <p className="tl-dep-sub">
+            {status?.python ? `Détecté${status.pythonVersion ? ` · ${status.pythonVersion}` : ''}` : 'Nécessaire pour exécuter spotdl'}
+          </p>
+          {status && !status.python && (
+            <Button
+              variant="secondary"
+              size="sm"
+              icon={<IconExternal size={13} />}
+              onClick={() => void api!.system.openExternal('https://www.python.org/downloads/')}
+            >
+              Télécharger Python
+            </Button>
+          )}
+          {status && !status.python && (
+            <span className="tl-hint">Cochez « Add to PATH » à l’installation, puis cliquez sur Revérifier.</span>
+          )}
         </motion.div>
-      )}
 
-      {status && !status.ffmpeg && (
-        <div className="tl-music-notice" style={{ borderColor: 'rgba(251,191,36,0.4)' }}>
-          <IconAlert size={15} style={{ flex: 'none', marginTop: 2, color: 'var(--tl-warning)' }} />
-          <div style={{ flex: 1, fontSize: 'var(--tl-text-sm)' }}>
-            <b>ffmpeg manque</b> (indispensable pour convertir en MP3).
-            <div className="tl-faint" style={{ fontSize: 'var(--tl-text-xs)', marginTop: 2 }}>
-              Windows : <span className="tl-mono">winget install Gyan.FFmpeg</span> — détails dans la FAQ ci-dessous. Puis bouton Rafraîchir.
-            </div>
+        {/* -------- spotdl -------- */}
+        <motion.div
+          className={`tl-dep-card ${status?.spotdl ? 'is-ready' : depInstall === 'spotdl' ? 'is-working' : 'is-missing'}`}
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3, delay: 0.08 }}
+        >
+          <div className="tl-dep-head">
+            <span className="tl-dep-ico"><IconDownload size={16} /></span>
+            <b>spotdl</b>
+            <span className={`tl-dep-dot ${status?.spotdl ? 'is-ok' : depInstall === 'spotdl' ? 'is-wait' : 'is-off'}`} />
           </div>
-        </div>
-      )}
+          <p className="tl-dep-sub">
+            {status?.spotdl ? 'Prêt (pip utilisateur)' : 'Moteur de téléchargement Spotify → MP3'}
+          </p>
+          {status && !status.spotdl && depInstall !== 'spotdl' && (
+            <>
+              <label className="tl-dep-consent">
+                <input type="checkbox" checked={consent} onChange={(e) => setConsent(e.target.checked)} />
+                J’autorise l’installation (pip --user, sans admin)
+              </label>
+              <Button variant="primary" size="sm" disabled={!consent || !status.python} onClick={() => void installDep('spotdl')} className="tl-btn-sheen">
+                Installer spotdl
+              </Button>
+              {!status.python && <span className="tl-hint">Installez d’abord Python.</span>}
+            </>
+          )}
+          {depInstall === 'spotdl' && (
+            <span className="tl-dep-working">Installation en cours… <span className="tl-dots" aria-hidden><i /><i /><i /></span></span>
+          )}
+        </motion.div>
+
+        {/* -------- ffmpeg -------- */}
+        <motion.div
+          className={`tl-dep-card ${status?.ffmpeg ? 'is-ready' : depInstall === 'ffmpeg' ? 'is-working' : 'is-missing'}`}
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3, delay: 0.14 }}
+        >
+          <div className="tl-dep-head">
+            <span className="tl-dep-ico"><IconWrench size={16} /></span>
+            <b>ffmpeg</b>
+            <span className={`tl-dep-dot ${status?.ffmpeg ? 'is-ok' : depInstall === 'ffmpeg' ? 'is-wait' : 'is-off'}`} />
+          </div>
+          <p className="tl-dep-sub">
+            {status?.ffmpeg
+              ? status.ffmpegSource === 'managed' ? 'Build géré par Teralynk' : 'Détecté sur le système'
+              : 'Conversion MP3 + tags & pochette'}
+          </p>
+          {status && !status.ffmpeg && depInstall !== 'ffmpeg' && (
+            <Button variant="primary" size="sm" icon={<IconDownload size={13} />} onClick={() => void installDep('ffmpeg')} className="tl-btn-sheen">
+              Installer ffmpeg (auto)
+            </Button>
+          )}
+          {depInstall === 'ffmpeg' && (
+            <div className="tl-dep-progress" role="progressbar" aria-label="Téléchargement de ffmpeg">
+              <div className="tl-progress" style={{ height: 6 }}>
+                <div className={`tl-progress-bar ${depProgress === null ? 'tl-progress-anim' : ''}`} style={{ width: depProgress === null ? undefined : `${Math.max(4, depProgress)}%` }} />
+              </div>
+              <span className="tl-faint tl-mono" style={{ fontSize: 10 }}>{depProgress !== null ? `${Math.round(depProgress)} %` : 'connexion…'}</span>
+            </div>
+          )}
+        </motion.div>
+      </div>
 
       {/* ---- Lien + dossier ---- */}
-      <div className="tl-field" style={{ marginTop: 4 }}>
+      <div className="tl-field" style={{ marginTop: 14 }}>
         <label className="tl-label">Lien Spotify (titre, album ou playlist)</label>
         <div className={`tl-search ${url && !urlCheck.ok ? 'is-invalid' : ''} ${urlCheck.ok ? 'is-valid' : ''}`} style={{ height: 44 }}>
           <IconDownload size={16} />
@@ -307,11 +451,29 @@ export function MusicDownloader({ card, onClose }: Props) {
             <IconFolder size={15} style={{ flex: 'none', color: 'var(--tl-accent-bright)' }} />
             <span className="tl-mono" style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{folder ?? '…'}</span>
           </div>
-          <Button variant="secondary" size="sm" disabled={running} onClick={async () => {
-            const result = await api!.music.pickFolder();
-            if (result.ok && result.folder) setFolder(result.folder ?? null);
-          }}>
+          <Button
+            variant="secondary"
+            size="sm"
+            disabled={running || depInstall !== null}
+            onClick={async () => {
+              const result = await api!.music.pickFolder();
+              if (result.ok && result.folder) {
+                setFolder(result.folder);
+                toast.push('info', `Dossier de destination : ${result.folder}`);
+              }
+            }}
+          >
             Dossier…
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            icon={<IconFolder size={13} />}
+            disabled={!folder || openingFolder}
+            loading={openingFolder}
+            onClick={() => void openDestinationFolder()}
+          >
+            Ouvrir le dossier
           </Button>
         </div>
       </div>
@@ -323,10 +485,10 @@ export function MusicDownloader({ card, onClose }: Props) {
             {STEPS.map((step, index) => {
               const state = index < stepIndex ? 'done' : index === stepIndex ? (running ? 'active' : step.id === 'done' ? 'done' : 'active') : 'todo';
               return (
-                <div key={step.id} className={`tl-step is-${state}`}>
+                <motion.div key={step.id} className={`tl-step is-${state}`} layout transition={{ type: 'spring', stiffness: 420, damping: 34 }}>
                   <span className="tl-step-dot">
                     {state === 'done' ? (
-                      <motion.span initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: 'spring', stiffness: 500, damping: 30 }}>
+                      <motion.span initial={{ scale: 0, rotate: -90 }} animate={{ scale: 1, rotate: 0 }} transition={{ type: 'spring', stiffness: 500, damping: 26 }}>
                         <IconCheck size={11} />
                       </motion.span>
                     ) : state === 'active' ? (
@@ -334,12 +496,47 @@ export function MusicDownloader({ card, onClose }: Props) {
                     ) : null}
                   </span>
                   <span className="tl-step-label">{step.label}</span>
-                </div>
+                  {state === 'active' && <span className="tl-step-shimmer" aria-hidden />}
+                </motion.div>
               );
             })}
             <div className="tl-progress" style={{ marginTop: 10 }}>
               <div className={`tl-progress-bar ${running ? 'tl-progress-anim' : ''}`} style={{ width: running ? undefined : stepIndex >= STEPS.length - 1 ? '100%' : '45%' }} />
             </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ---- Célébration de succès ---- */}
+      <AnimatePresence>
+        {succeeded && (
+          <motion.div
+            className="tl-celebrate"
+            initial={{ opacity: 0, scale: 0.92, y: 8 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.96 }}
+            transition={{ type: 'spring', stiffness: 320, damping: 24 }}
+          >
+            <span className="tl-confetti" aria-hidden>
+              {Array.from({ length: 10 }).map((_, i) => <i key={i} style={{ ['--i' as string]: i }} />)}
+            </span>
+            <motion.span
+              className="tl-celebrate-check"
+              initial={{ scale: 0, rotate: -120 }}
+              animate={{ scale: 1, rotate: 0 }}
+              transition={{ type: 'spring', stiffness: 380, damping: 18, delay: 0.08 }}
+            >
+              <IconCheck size={20} />
+            </motion.span>
+            <div style={{ flex: 1 }}>
+              <b>Musique livrée !</b>
+              <div className="tl-faint" style={{ fontSize: 'var(--tl-text-xs)', marginTop: 2 }}>
+                Fichier MP3 tagué (artiste, titre, pochette) déposé dans votre dossier de destination.
+              </div>
+            </div>
+            <Button variant="secondary" size="sm" icon={<IconFolder size={13} />} onClick={() => void openDestinationFolder()}>
+              Ouvrir le dossier
+            </Button>
           </motion.div>
         )}
       </AnimatePresence>
@@ -351,10 +548,16 @@ export function MusicDownloader({ card, onClose }: Props) {
         </motion.div>
       )}
 
+      {!envReady && !error && status && (
+        <p className="tl-faint" style={{ fontSize: 'var(--tl-text-xs)', marginTop: 10 }}>
+          Installez les dépendances ci-dessus (un clic par dépendance) pour activer le téléchargement.
+        </p>
+      )}
+
       {showLog && (
-        <pre className="tl-code" style={{ maxHeight: 160, marginTop: 4 }}>
+        <motion.pre className="tl-code" initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} style={{ maxHeight: 160, marginTop: 4 }}>
           {lines.length ? lines.join('\n') : '(aucune sortie pour l’instant)'}
-        </pre>
+        </motion.pre>
       )}
 
       {/* ---- FAQ ---- */}

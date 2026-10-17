@@ -36,6 +36,10 @@ export function UpdateGate({ onGatePassed }: Props) {
   const [downloading, setDownloading] = useState(false);
   const [downloadError, setDownloadError] = useState<string | null>(null);
   const [downloaded, setDownloaded] = useState<string | null>(null);
+  // v1.5.0 : état RÉEL du redémarrage (confirmé par electron-updater via
+  // 'updates:installing'), et non plus une simple promesse textuelle.
+  const [installing, setInstalling] = useState(false);
+  const [installBlocked, setInstallBlocked] = useState(false);
   const stepTimer = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const runCheck = useCallback(async () => {
@@ -46,6 +50,8 @@ export function UpdateGate({ onGatePassed }: Props) {
     setDownloadError(null);
     setDownloaded(null);
     setDownloading(false);
+    setInstalling(false);
+    setInstallBlocked(false);
 
     // Les étapes défilent PENDANT la vraie requête (jamais après coup) :
     // la vérification réseau prend typiquement 0,5–3 s.
@@ -66,8 +72,19 @@ export function UpdateGate({ onGatePassed }: Props) {
     void runCheck();
     const unsubscribe = api?.events.onUpdates((channel, payload) => {
       if (channel === 'updates:progress') setProgress(payload as UpdateProgress);
-      if (channel === 'updates:error') setDownloadError((payload as { message: string }).message);
+      if (channel === 'updates:error') {
+        setDownloadError((payload as { message: string }).message);
+        // Le watchdog du processus principal signale un redémarrage bloqué :
+        // on revient à un état actionnable au lieu d'un écran figé.
+        setInstalling(false);
+        setInstallBlocked(true);
+      }
       if (channel === 'updates:downloaded') setDownloaded((payload as { version: string }).version);
+      if (channel === 'updates:installing') {
+        setInstalling(true);
+        setInstallBlocked(false);
+        setDownloadError(null);
+      }
     });
     return () => {
       unsubscribe?.();
@@ -82,6 +99,15 @@ export function UpdateGate({ onGatePassed }: Props) {
     if (!response.started) {
       setDownloading(false);
       setDownloadError(response.error ?? 'Téléchargement impossible.');
+    }
+  };
+
+  const startInstall = async () => {
+    setDownloadError(null);
+    setInstallBlocked(false);
+    const response = await api!.updates.installNow();
+    if (!response.ok) {
+      setDownloadError(response.error ?? 'Installation impossible dans ce contexte.');
     }
   };
 
@@ -124,7 +150,14 @@ export function UpdateGate({ onGatePassed }: Props) {
                 <IconAlert size={38} />
               </motion.div>
             )}
-            {phase === 'result' && (outcome?.state === 'optional-update' || outcome?.state === 'mandatory-update') && (
+            {installing && (
+              <motion.div key="restarting" initial={{ opacity: 0, scale: 0.7 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }}>
+                <span className="tl-spin" style={{ display: 'inline-flex' }}>
+                  <IconRefresh size={38} />
+                </span>
+              </motion.div>
+            )}
+            {!installing && phase === 'result' && (outcome?.state === 'optional-update' || outcome?.state === 'mandatory-update') && (
               <motion.div key="dl" initial={{ opacity: 0, scale: 0.7 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }}>
                 <IconDownload size={38} />
               </motion.div>
@@ -199,35 +232,58 @@ export function UpdateGate({ onGatePassed }: Props) {
                   </div>
                 )}
                 {downloadError && <p className="tl-gate-message" style={{ color: 'var(--tl-danger)' }}>{downloadError}</p>}
-                {downloaded && (
+                {downloaded && !installing && (
                   <p className="tl-gate-message" style={{ color: 'var(--tl-success)' }}>
-                    Version {downloaded} téléchargée et vérifiée. Teralynk va redémarrer et relancer la vérification.
+                    Version {downloaded} téléchargée et vérifiée. Cliquez sur « Installer et redémarrer » :
+                    Teralynk se ferme, l’installateur s’exécute, puis l’application rouvre ce contrôle de version.
                   </p>
                 )}
 
+                {/* -------- Redémarrage RÉELLEMENT engagé (confirmé par le processus principal) -------- */}
+                {installing && (
+                  <div className="tl-gate-restarting" role="status" aria-live="assertive">
+                    <div className="tl-gate-restart-ring" aria-hidden>
+                      <span /><span /><span />
+                    </div>
+                    <b>Redémarrage de Teralynk…</b>
+                    <span className="tl-faint" style={{ fontSize: 'var(--tl-text-xs)' }}>
+                      L’installateur vérifié prend le relais : ne fermez pas votre ordinateur.
+                      L’application rouvrira automatiquement cet écran de vérification.
+                    </span>
+                  </div>
+                )}
+
                 <div className="tl-gate-actions">
-                  {!downloaded && (
+                  {!installing && !downloaded && (
                     <Button variant="primary" size="lg" loading={downloading} icon={<IconDownload size={16} />} onClick={startDownload}>
                       {downloading ? 'Téléchargement…' : 'Télécharger la mise à jour'}
                     </Button>
                   )}
-                  {downloaded && (
-                    <Button variant="primary" size="lg" onClick={() => void api!.updates.installNow()}>
+                  {!installing && downloaded && (
+                    <Button variant="primary" size="lg" icon={<IconRefresh size={16} />} onClick={startInstall} className="tl-btn-sheen">
                       Installer et redémarrer
                     </Button>
                   )}
-                  {outcome.state === 'optional-update' && !downloading && !downloaded && (
+                  {outcome.state === 'optional-update' && !downloading && !downloaded && !installing && (
                     <Button variant="secondary" size="lg" onClick={() => onGatePassed(result)}>
                       Continuer avec {result.installedVersion}
                     </Button>
                   )}
-                  <Button variant="ghost" size="lg" icon={<IconExternal size={15} />} onClick={() => void api!.system.openExternal(result.releasesUrl)}>
-                    Page des versions
-                  </Button>
-                  {!result.canAutoInstall && (
+                  {!installing && (
+                    <Button variant="ghost" size="lg" icon={<IconExternal size={15} />} onClick={() => void api!.system.openExternal(result.releasesUrl)}>
+                      Page des versions
+                    </Button>
+                  )}
+                  {!result.canAutoInstall && !installing && (
                     <p className="tl-faint" style={{ width: '100%', fontSize: 'var(--tl-text-xs)' }}>
                       Installation automatique indisponible dans ce contexte (application non empaquetée) :
                       téléchargez l’installateur depuis la page des versions GitHub.
+                    </p>
+                  )}
+                  {installBlocked && !installing && (
+                    <p className="tl-faint" style={{ width: '100%', fontSize: 'var(--tl-text-xs)' }}>
+                      Astuce : la mise à jour téléchargée est installée automatiquement à la fermeture de Teralynk.
+                      Vous pouvez donc simplement fermer cette fenêtre, puis rouvrir l’application.
                     </p>
                   )}
                 </div>

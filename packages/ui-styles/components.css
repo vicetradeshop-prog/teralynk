@@ -568,3 +568,201 @@
   40% { transform: rotate(-7deg) scale(1.12); }
   100% { transform: rotate(0) scale(1); }
 }
+
+/* ================================================================== */
+/* v1.5.0 — Téléchargeur de musique : scène animée, dépendances,       */
+/* célébration de succès                                               */
+/* ================================================================== */
+
+/* Scène de fond : orbes dérivants + notes de musique flottantes */
+.tl-music-stage {
+  position: absolute; inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  border-radius: inherit;
+  z-index: 0;
+}
+.tl-music-orb {
+  position: absolute;
+  width: 220px; height: 220px;
+  border-radius: 50%;
+  filter: blur(46px);
+  opacity: 0.5;
+  background: radial-gradient(circle at 35% 35%, rgba(139, 92, 246, 0.55), transparent 65%);
+  animation: tl-orb-drift 14s var(--tl-ease-soft) infinite alternate;
+}
+.tl-music-orb:nth-child(2) {
+  width: 170px; height: 170px;
+  right: -40px; top: 30%;
+  background: radial-gradient(circle at 60% 40%, rgba(56, 189, 248, 0.5), transparent 65%);
+  animation-duration: 18s;
+  animation-delay: -6s;
+}
+.tl-music-orb:nth-child(3) {
+  width: 130px; height: 130px;
+  left: 30%; bottom: -30px;
+  background: radial-gradient(circle at 50% 50%, rgba(236, 72, 153, 0.35), transparent 65%);
+  animation-duration: 11s;
+  animation-delay: -3s;
+}
+@keyframes tl-orb-drift {
+  0% { transform: translate3d(-8%, -4%, 0) scale(1); }
+  50% { transform: translate3d(10%, 6%, 0) scale(1.15); }
+  100% { transform: translate3d(-4%, 10%, 0) scale(0.95); }
+}
+.tl-music-note {
+  position: absolute;
+  bottom: -24px;
+  font-size: 18px;
+  color: rgba(167, 139, 250, 0.5);
+  animation: tl-note-rise 9s linear infinite;
+}
+.tl-music-note:nth-child(4) { left: 12%; animation-delay: 0s; }
+.tl-music-note:nth-child(5) { left: 48%; animation-delay: 3s; font-size: 14px; color: rgba(56, 189, 248, 0.45); }
+.tl-music-note:nth-child(6) { left: 78%; animation-delay: 6s; font-size: 22px; }
+@keyframes tl-note-rise {
+  0% { transform: translateY(0) rotate(0deg); opacity: 0; }
+  12% { opacity: 0.9; }
+  85% { opacity: 0.5; }
+  100% { transform: translateY(-420px) rotate(24deg); opacity: 0; }
+}
+
+/* Grille des cartes de dépendances */
+.tl-dep-grid {
+  position: relative; z-index: 1;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 10px;
+}
+.tl-dep-card {
+  display: flex; flex-direction: column; gap: 8px;
+  padding: 12px 13px;
+  border-radius: var(--tl-radius-md);
+  border: 1px solid var(--tl-line);
+  background: rgba(255, 255, 255, 0.025);
+  transition: transform 0.22s var(--tl-ease), border-color 0.22s, box-shadow 0.22s, background 0.22s;
+}
+.tl-dep-card:hover { transform: translateY(-2px); box-shadow: 0 8px 22px rgba(0, 0, 0, 0.35); }
+.tl-dep-card.is-ready {
+  border-color: rgba(52, 211, 153, 0.45);
+  background: linear-gradient(160deg, rgba(52, 211, 153, 0.08), rgba(255, 255, 255, 0.02));
+  box-shadow: inset 0 0 18px rgba(52, 211, 153, 0.06);
+}
+.tl-dep-card.is-missing { border-color: rgba(251, 191, 36, 0.35); }
+.tl-dep-card.is-working {
+  border-color: rgba(110, 86, 248, 0.55);
+  animation: tl-dep-breathe 1.6s var(--tl-ease-soft) infinite;
+}
+@keyframes tl-dep-breathe {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(110, 86, 248, 0.22); }
+  50% { box-shadow: 0 0 18px 1px rgba(110, 86, 248, 0.3); }
+}
+.tl-dep-head { display: flex; align-items: center; gap: 8px; }
+.tl-dep-head b { font-size: var(--tl-text-sm); }
+.tl-dep-ico {
+  width: 26px; height: 26px; flex: none;
+  display: grid; place-items: center;
+  border-radius: 8px;
+  color: var(--tl-accent-bright);
+  background: var(--tl-accent-soft);
+}
+.tl-dep-dot {
+  margin-left: auto;
+  width: 9px; height: 9px; border-radius: 50%;
+  background: var(--tl-line-strong);
+}
+.tl-dep-dot.is-ok {
+  background: var(--tl-success);
+  animation: tl-dot-pulse 1.8s var(--tl-ease-soft) infinite;
+}
+.tl-dep-dot.is-wait { background: var(--tl-warning); animation: tl-dot-pulse 1s var(--tl-ease-soft) infinite; }
+.tl-dep-dot.is-off { background: rgba(255, 255, 255, 0.18); }
+@keyframes tl-dot-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(52, 211, 153, 0.45); }
+  50% { box-shadow: 0 0 0 6px rgba(52, 211, 153, 0); }
+}
+.tl-dep-sub { font-size: var(--tl-text-xs); color: var(--tl-text-faint); line-height: 1.45; min-height: 17px; }
+.tl-dep-consent {
+  display: flex; align-items: flex-start; gap: 7px;
+  font-size: var(--tl-text-xs);
+  color: var(--tl-text-dim);
+  cursor: pointer;
+  line-height: 1.4;
+}
+.tl-dep-working {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: var(--tl-text-xs);
+  color: var(--tl-accent-bright);
+  font-weight: 600;
+}
+.tl-dep-progress { display: flex; flex-direction: column; gap: 4px; }
+/* Points de suspension animés */
+.tl-dots { display: inline-flex; gap: 3px; }
+.tl-dots i {
+  width: 4px; height: 4px; border-radius: 50%;
+  background: currentColor;
+  animation: tl-dots-blink 1.2s infinite;
+}
+.tl-dots i:nth-child(2) { animation-delay: 0.2s; }
+.tl-dots i:nth-child(3) { animation-delay: 0.4s; }
+@keyframes tl-dots-blink {
+  0%, 60%, 100% { opacity: 0.25; transform: translateY(0); }
+  30% { opacity: 1; transform: translateY(-2px); }
+}
+
+/* Reflet qui balaie la ligne d'étape active */
+.tl-step { position: relative; }
+.tl-step-shimmer {
+  position: absolute; left: 30px; right: 0; top: 50%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--tl-accent-glow), transparent);
+  animation: tl-step-shimmer 1.6s var(--tl-ease-soft) infinite;
+}
+@keyframes tl-step-shimmer {
+  0% { transform: translateX(-30%); opacity: 0; }
+  40% { opacity: 1; }
+  100% { transform: translateX(130%); opacity: 0; }
+}
+
+/* Célébration de fin de téléchargement */
+.tl-celebrate {
+  position: relative; z-index: 1;
+  display: flex; align-items: center; gap: 12px;
+  padding: 13px 15px;
+  margin: 4px 0 12px;
+  border-radius: var(--tl-radius-md);
+  border: 1px solid rgba(52, 211, 153, 0.45);
+  background: linear-gradient(150deg, rgba(52, 211, 153, 0.14), rgba(56, 189, 248, 0.06));
+  overflow: hidden;
+  font-size: var(--tl-text-sm);
+  color: var(--tl-text);
+}
+.tl-celebrate-check {
+  width: 34px; height: 34px; flex: none;
+  display: grid; place-items: center;
+  border-radius: 50%;
+  color: #04240f;
+  background: linear-gradient(140deg, #6ee7b7, #34d399);
+  box-shadow: 0 0 18px rgba(52, 211, 153, 0.5);
+}
+.tl-confetti { position: absolute; inset: 0; pointer-events: none; }
+.tl-confetti i {
+  position: absolute;
+  top: -6px;
+  left: calc(var(--i) * 10% + 3%);
+  width: 5px; height: 9px;
+  border-radius: 2px;
+  background: hsl(calc(var(--i) * 36deg) 85% 65%);
+  animation: tl-confetti-fall 2.4s var(--tl-ease) calc(var(--i) * 0.12s) infinite;
+  opacity: 0;
+}
+@keyframes tl-confetti-fall {
+  0% { transform: translateY(-8px) rotate(0deg); opacity: 0; }
+  10% { opacity: 1; }
+  100% { transform: translateY(90px) rotate(540deg); opacity: 0; }
+}
+
+/* La scène animée musique se cale sur la carte modale ; le contenu reste
+   au-dessus (fond décoratif uniquement, pointer-events: none). */
+.tl-modal-head, .tl-modal-body, .tl-modal-foot { position: relative; z-index: 1; }
+.tl-modal-body > .tl-music-stage { position: absolute; inset: 0; z-index: 0; }

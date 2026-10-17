@@ -225,7 +225,7 @@ interface ElectronAutoUpdater {
   setFeedURL(url: unknown): void;
   checkForUpdates(): Promise<{ updateInfo?: unknown; cancellationToken?: unknown } | null>;
   downloadUpdate(): Promise<unknown>;
-  quitAndInstall(): void;
+  quitAndInstall(isSilent?: boolean, isForceRunAfter?: boolean): void;
 }
 
 export interface DownloadProgress {
@@ -235,7 +235,61 @@ export interface DownloadProgress {
   total: number;
 }
 
+/**
+ * Instance UNIQUE d'electron-updater pour toute la session.
+ *
+ * CORRECTION v1.5.0 : auparavant, `quitAndInstall()` ré-importait le module et
+ * pouvait toucher une instance différente de celle qui avait téléchargé la
+ * mise à jour (voire une instance jamais initialisée) : le clic sur
+ * « Installer et redémarrer » ne produisait alors STRICTEMENT RIEN.
+ * L'instance est désormais créée une seule fois, mémorisée ici, et réutilisée
+ * pour le téléchargement ET pour l'installation.
+ */
+let cachedUpdater: ElectronAutoUpdater | null = null;
 let updaterWired = false;
+/** Version téléchargée et vérifiée dans cette session (sinon null). */
+let downloadedVersion: string | null = null;
+/** Un quitAndInstall est en cours (évite les doubles déclenchements). */
+let installInProgress = false;
+/** Passé à true dès que electron-updater confirme qu'il quitte pour installer. */
+let quitConfirmed = false;
+
+async function resolveUpdater(): Promise<ElectronAutoUpdater | null> {
+  if (cachedUpdater) return cachedUpdater;
+  const mod = (await import('electron-updater')) as unknown as {
+    autoUpdater?: ElectronAutoUpdater;
+    default?: { autoUpdater?: ElectronAutoUpdater };
+    AppUpdater?: new () => ElectronAutoUpdater;
+  };
+  const updater = mod.autoUpdater ?? mod.default?.autoUpdater ?? (mod.AppUpdater ? new mod.AppUpdater() : undefined);
+  if (updater) cachedUpdater = updater;
+  return updater ?? null;
+}
+
+function wireUpdater(autoUpdater: ElectronAutoUpdater, window: BrowserWindow): void {
+  if (updaterWired) return;
+  updaterWired = true;
+  const send = (channel: string, payload: unknown) => {
+    if (!window.isDestroyed()) window.webContents.send(channel, payload);
+  };
+  autoUpdater.on('download-progress', (progress: DownloadProgress) => send('updates:progress', progress));
+  autoUpdater.on('error', (error: Error) => {
+    log('error', 'electron-updater : erreur', { reason: error.message });
+    installInProgress = false;
+    send('updates:error', { message: error.message });
+  });
+  autoUpdater.on('update-downloaded', (info: { version: string }) => {
+    downloadedVersion = info.version;
+    log('info', `Mise à jour téléchargée et vérifiée : ${info.version}`);
+    send('updates:downloaded', { version: info.version });
+  });
+  // Émis par electron-updater juste avant de quitter pour lancer l'installateur :
+  // c'est NOTRE confirmation que le redémarrage est réellement engagé.
+  autoUpdater.on('before-quit-for-update', () => {
+    quitConfirmed = true;
+    send('updates:installing', { version: downloadedVersion });
+  });
+}
 
 /**
  * Branche electron-updater sur le provider GitHub officiel et lance le
@@ -250,16 +304,7 @@ export async function downloadAndInstallUpdate(window: BrowserWindow): Promise<{
     };
   }
   try {
-    // Import dynamique : electron-updater n'est utile qu'en mode empaqueté.
-    // Résolution défensive : certaines configurations d'empaquetage (monorepos,
-    // hoisting) peuvent exposer un module sans autoUpdater — on le détecte et
-    // on renvoie un message actionnable au lieu d'un crash cryptique.
-    const mod = (await import('electron-updater')) as unknown as {
-      autoUpdater?: ElectronAutoUpdater;
-      default?: { autoUpdater?: ElectronAutoUpdater };
-      AppUpdater?: new () => ElectronAutoUpdater;
-    };
-    const autoUpdater = mod.autoUpdater ?? mod.default?.autoUpdater ?? (mod.AppUpdater ? new mod.AppUpdater() : undefined);
+    const autoUpdater = await resolveUpdater();
     if (!autoUpdater) {
       return {
         started: false,
@@ -267,26 +312,14 @@ export async function downloadAndInstallUpdate(window: BrowserWindow): Promise<{
       };
     }
     autoUpdater.autoDownload = false;
+    // Filet de sécurité : si l'utilisateur ferme la fenêtre après un
+    // téléchargement vérifié, l'installation se fait à la fermeture.
     autoUpdater.autoInstallOnAppQuit = true;
     // Source unique de vérité : le flux de téléchargement est forcé depuis le
     // module de configuration central (le bloc publish d'electron-builder.yml
     // ne sert que d'échafaudage à app-update.yml lors du packaging).
     autoUpdater.setFeedURL({ provider: 'github', owner: REMOTE_CONFIG.owner, repo: REMOTE_CONFIG.repo });
-
-    if (!updaterWired) {
-      updaterWired = true;
-      autoUpdater.on('download-progress', (progress: DownloadProgress) => {
-        if (!window.isDestroyed()) window.webContents.send('updates:progress', progress);
-      });
-      autoUpdater.on('error', (error: Error) => {
-        log('error', 'electron-updater : erreur', { reason: error.message });
-        if (!window.isDestroyed()) window.webContents.send('updates:error', { message: error.message });
-      });
-      autoUpdater.on('update-downloaded', (info: { version: string }) => {
-        log('info', `Mise à jour téléchargée et vérifiée : ${info.version}`);
-        if (!window.isDestroyed()) window.webContents.send('updates:downloaded', { version: info.version });
-      });
-    }
+    wireUpdater(autoUpdater, window);
 
     // electron-updater exige un checkForUpdates() préalable : sans lui,
     // downloadUpdate() rejette « Check for updates first ». Le gate a déjà
@@ -307,7 +340,84 @@ export async function downloadAndInstallUpdate(window: BrowserWindow): Promise<{
   }
 }
 
-export function quitAndInstall(): void {
-  if (!app.isPackaged) return;
-  import('electron-updater').then(({ autoUpdater }) => autoUpdater.quitAndInstall());
+/**
+ * Installe la mise à jour téléchargée puis redémarre — CORRECTION v1.5.0.
+ *
+ * Ancien comportement défectueux : `quitAndInstall()` fire-and-forget sur une
+ * instance potentiellement différente, aucun retour vers l'UI, aucun filet de
+ * sécurité : l'écran annonçait un redémarrage qui n'arrivait jamais.
+ *
+ * Nouveau comportement :
+ *  1. refuse s'il n'y a RIEN de téléchargé/vérifié dans la session (message clair) ;
+ *  2. prévient l'UI (`updates:installing`) qui affiche l'écran de redémarrage ;
+ *  3. appelle quitAndInstall() sur l'instance qui a téléchargé, après un court
+ *     délai pour laisser l'UI se peindre ;
+ *  4. WATCHDOG : si electron-updater n'a pas confirmé le départ après 12 s,
+ *     seconde tentative silencieuse ; après 20 s sans départ, l'UI revient à
+ *     un état d'erreur ACTIONNABLE (réessayer / fermer pour installer à la
+ *     fermeture / page des versions) au lieu d'un écran figé.
+ */
+export function installDownloadedUpdate(window: BrowserWindow): { ok: boolean; error?: string } {
+  if (!app.isPackaged) {
+    return {
+      ok: false,
+      error: 'L’installation automatique n’est disponible que dans la version empaquetée de Teralynk. En développement, téléchargez la version depuis la page des releases GitHub.'
+    };
+  }
+  const updater = cachedUpdater;
+  if (!updater || !downloadedVersion) {
+    return {
+      ok: false,
+      error: 'Aucune mise à jour téléchargée et vérifiée dans cette session. Relancez le téléchargement depuis cet écran, puis cliquez à nouveau sur « Installer et redémarrer ».'
+    };
+  }
+  if (installInProgress) return { ok: true };
+  installInProgress = true;
+  quitConfirmed = false;
+  const version = downloadedVersion;
+  log('info', `Installation de la mise à jour ${version} demandée (quitAndInstall sur l'instance active)`);
+  if (!window.isDestroyed()) window.webContents.send('updates:installing', { version });
+
+  const attempt = (silent: boolean) => {
+    try {
+      updater.quitAndInstall(silent, true);
+    } catch (error) {
+      log('error', 'quitAndInstall a levé une exception', { reason: (error as Error).message });
+    }
+  };
+
+  // Laisse l'UI peindre l'écran « Redémarrage… » avant que le processus quitte.
+  setTimeout(() => attempt(false), 450);
+
+  // Watchdog 1 : seconde tentative silencieuse si aucun départ confirmé.
+  setTimeout(() => {
+    if (!quitConfirmed && installInProgress) {
+      log('warn', 'quitAndInstall sans effet après 12 s — seconde tentative silencieuse');
+      attempt(true);
+    }
+  }, 12000);
+
+  // Watchdog 2 : retour à un état actionnable si toujours vivant après 20 s.
+  setTimeout(() => {
+    if (!quitConfirmed && installInProgress) {
+      installInProgress = false;
+      log('error', 'Redémarrage bloqué : l’installateur n’a pas pris la main après 20 s');
+      if (!window.isDestroyed()) {
+        window.webContents.send('updates:error', {
+          message:
+            'Le redémarrage automatique a été bloqué (antivirus, Smart App Control ou droits insuffisants). ' +
+            'Deux solutions : fermez Teralynk — l’installation vérifiée se lancera automatiquement à la fermeture — ' +
+            'ou réessayez depuis cet écran / installez manuellement depuis la page des versions.'
+        });
+      }
+    }
+  }, 20000);
+
+  return { ok: true };
+}
+
+/** Compatibilité : nom historique utilisé par d'éventuels appels internes. */
+export function quitAndInstall(window: BrowserWindow | null): { ok: boolean; error?: string } {
+  if (!window || window.isDestroyed()) return { ok: false, error: 'Fenêtre indisponible.' };
+  return installDownloadedUpdate(window);
 }

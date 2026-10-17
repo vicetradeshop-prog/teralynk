@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 1,
+  "channel": "stable",
+  "latest": {
+    "version": "1.4.1",
+    "channel": "stable",
+    "title": "Teralynk 1.4.1",
+    "notes": "New version Corrigé",
+    "publishedAt": "2026-10-17T11:48:28.323Z",
+    "tag": "v1.4.1",
+    "minSupportedVersion": "1.0.0",
+    "files": [
+      {
+        "name": "Teralynk-Setup-1.4.1.exe",
+        "sha256": "373cec26c52e80a20a789447af5a0a35adfc9bd8dc37b77189f43b7f03d5332d",
+        "size": 79324570
+      },
+      {
+        "name": "latest.yml",
+        "sha256": "2c47bde56dccc696c33dee205b0eedb3a79cfc4507fea0afa4e6a30f64f0f833",
+        "size": 344
+      }
+    ]
+  },
+  "history": [
+    {
+      "version": "1.4.1",
+      "channel": "stable",
+      "title": "Teralynk 1.4.1",
+      "notes": "New version Corrigé",
+      "publishedAt": "2026-10-17T11:48:28.323Z",
+      "tag": "v1.4.1",
+      "minSupportedVersion": "1.0.0",
+      "files": [
+        {
+          "name": "Teralynk-Setup-1.4.1.exe",
+          "sha256": "373cec26c52e80a20a789447af5a0a35adfc9bd8dc37b77189f43b7f03d5332d",
+          "size": 79324570
+        },
+        {
+          "name": "latest.yml",
+          "sha256": "2c47bde56dccc696c33dee205b0eedb3a79cfc4507fea0afa4e6a30f64f0f833",
+          "size": 344
+        }
+      ]
+    }
+  ]
+}

@@ -29,6 +29,62 @@ const STATUS_LABELS: Record<string, string> = {
 
 const ICON_CHOICES = ['sparkles', 'terminal', 'wrench', 'flask', 'shield', 'globe', 'folder', 'layers', 'clock', 'download', 'star', 'poll'];
 
+/**
+ * Modèle COMPLET de la carte « Téléchargeur de musique (spotdl) ».
+ * v1.5.0 : quand l'administrateur choisit l'interface native music-downloader,
+ * TOUTES les informations de la carte sont préremplies immédiatement (nom,
+ * description, catégorie, icône, statut, prérequis, permissions, capacités,
+ * risques, tags, notes de version) — plus aucune carte spotdl vide ou bâclée.
+ * Un bouton « Appliquer le modèle spotdl » permet de le réappliquer à tout
+ * moment sur une carte existante (ex. corriger une ancienne carte).
+ */
+function spotdlTemplate(now: string): Partial<FeatureCard> {
+  return {
+    name: 'Téléchargeur de musique (spotdl)',
+    description:
+      'Téléchargez vos musiques Spotify (titre, album ou playlist) en MP3 tagué : artiste, album, pochette. Installation guidée des dépendances en un clic.',
+    longDescription:
+      'Interface native intégrée à Teralynk : collez un lien Spotify (track, album, playlist ou artist), choisissez votre dossier de destination ' +
+      'et lancez le téléchargement. spotdl (open source, installé dans votre profil utilisateur uniquement) récupère le flux audio, ' +
+      'ffmpeg (build statique officiel installé localement par Teralynk, sans toucher à Windows) convertit en MP3 jusqu’à 320 kb/s ' +
+      'et incruste les métadonnées complètes. Chaque dépendance (Python, spotdl, ffmpeg) possède son bouton d’installation : ' +
+      'rien n’est installé sans votre clic. Progression réelle, journal détaillé, ouverture directe du dossier de destination.',
+    category: 'Musique',
+    icon: 'download',
+    tags: ['musique', 'spotify', 'mp3', 'téléchargement', 'spotdl'],
+    status: 'available',
+    platforms: ['windows'],
+    requirements: [
+      'Windows 10/11',
+      'Python 3.8+ (bouton « Télécharger Python » fourni, cochez « Add to PATH »)',
+      'spotdl (installation en 1 clic depuis l’interface)',
+      'ffmpeg (installation automatique en 1 clic depuis l’interface)',
+      'Connexion Internet'
+    ],
+    permissions: [
+      'Écriture uniquement dans le dossier de destination choisi par l’utilisateur',
+      'Téléchargement des paquets officiels PyPI (spotdl) et GitHub (ffmpeg)',
+      'Aucun privilège administrateur, aucune modification du système'
+    ],
+    capabilities: [
+      'Téléchargement d’un titre, album ou playlist Spotify en MP3 tagué (artiste, album, année, piste, pochette)',
+      'Installation guidée des dépendances : boutons dédiés Python, spotdl et ffmpeg avec progression réelle',
+      'Choix du dossier de destination via la boîte de dialogue système et ouverture directe dans l’Explorateur',
+      'Suivi en direct : étapes animées, journal détaillé, arrêt possible à tout moment'
+    ],
+    knownRisks: [
+      'Respectez le droit d’auteur : téléchargez uniquement des contenus que vous avez le droit de conserver',
+      'Le téléchargement de ffmpeg pèse environ 90 Mo (build statique officiel)'
+    ],
+    riskLevel: 'low',
+    featureUi: 'music-downloader',
+    unavailableReason: undefined,
+    releaseNotes:
+      'v1.5.0 : dépendances installables en un clic (spotdl + ffmpeg automatique), boutons dossier réparés, interface entièrement animée.',
+    updatedAt: now
+  };
+}
+
 function emptyCard(): FeatureCard {
   const now = new Date().toISOString();
   // Objet brut : la validation stricte se fait en direct dans l'éditeur et à
@@ -360,11 +416,28 @@ function CardEditor({
   onCancel: () => void;
   onSave: (card: FeatureCard) => void;
 }) {
+  const toast = useToast();
   const [draft, setDraft] = useState<FeatureCard>(card);
   const [showScript, setShowScript] = useState(Boolean(card.script));
   const [validationError, setValidationError] = useState<string | null>(null);
 
   const set = <K extends keyof FeatureCard>(key: K, value: FeatureCard[K]) => setDraft((d) => ({ ...d, [key]: value }));
+
+  /** (v1.5.0) Applique le modèle complet spotdl à la carte en cours d'édition. */
+  const applySpotdlTemplate = (announce: boolean) => {
+    const now = new Date().toISOString();
+    setDraft((d) => ({
+      ...d,
+      ...spotdlTemplate(now),
+      id: d.id || 'telechargeur-musique-spotdl',
+      slug: d.slug || 'telechargeur-musique-spotdl',
+      featureUi: 'music-downloader',
+      script: undefined,
+      createdAt: d.createdAt || now
+    }));
+    setShowScript(false);
+    if (announce) toast.push('success', 'Modèle spotdl appliqué : toutes les informations de la carte sont préremplies.');
+  };
 
   const validation = featureCardSchema.safeParse(draft);
   useEffect(() => {
@@ -508,7 +581,15 @@ function CardEditor({
         <select
           className="tl-select"
           value={draft.featureUi ?? ''}
-          onChange={(e) => set('featureUi', (e.target.value || undefined) as FeatureCard['featureUi'])}
+          onChange={(e) => {
+            const value = (e.target.value || undefined) as FeatureCard['featureUi'];
+            if (value === 'music-downloader') {
+              // v1.5.0 : sélection spotdl = carte préremplie immédiatement.
+              applySpotdlTemplate(true);
+            } else {
+              set('featureUi', value);
+            }
+          }}
         >
           <option value="">Aucune (carte standard / script)</option>
           <option value="music-downloader">Téléchargeur de musique (spotdl)</option>
@@ -517,6 +598,14 @@ function CardEditor({
           Une carte avec interface native n’a pas besoin de script : l’application embarque la fonctionnalité
           (statut « disponible » autorisé sans empreinte SHA-256).
         </span>
+        {draft.featureUi === 'music-downloader' && (
+          <div className="tl-row" style={{ gap: 8, marginTop: 8 }}>
+            <Button variant="secondary" size="sm" onClick={() => applySpotdlTemplate(true)}>
+              (Ré)appliquer le modèle complet spotdl
+            </Button>
+            <span className="tl-hint">Préremplit nom, descriptions, statut, prérequis, permissions, capacités, risques et tags.</span>
+          </div>
+        )}
       </div>
 
       <div className="tl-divider" />

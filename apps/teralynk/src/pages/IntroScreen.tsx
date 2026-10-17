@@ -73,6 +73,8 @@ export function IntroScreen({ onFinished, skipIntro, reducedMotionSetting, tagli
         >
           <div className="tl-logo-ring" aria-hidden />
           <div className="tl-logo-ring" aria-hidden />
+          <span className="tl-logo-orbit" aria-hidden><i /></span>
+          <span className="tl-logo-orbit rev" aria-hidden><i /></span>
           <div className="tl-logo-core">
             <TeralynkMark size={52} />
           </div>

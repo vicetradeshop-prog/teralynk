@@ -17,6 +17,8 @@ gestion du catalogue, des annonces, des sondages et création de releases GitHub
 | Introduction animée au lancement (logo, marque, transition) | ✅ implémentée | `apps/teralynk/src/pages/IntroScreen.tsx` |
 | Vérification **obligatoire** des mises à jour (manifeste signé Ed25519) | ✅ implémentée | `apps/teralynk/electron/services/updates.ts` |
 | Mise à jour automatique via electron-updater (releases GitHub) | ✅ implémentée (empaqueté) | idem |
+| Redémarrage post-mise-à-jour fiable (instance updater unique, watchdog 12 s/20 s, écran « Redémarrage… » confirmé) | ✅ implémenté (v1.5.0) | `apps/teralynk/electron/services/updates.ts` |
+| Téléchargeur de musique natif (spotdl + ffmpeg installables en 1 clic, progression réelle, dossiers fonctionnels) | ✅ implémenté (v1.5.0) | `apps/teralynk/src/features/MusicDownloader.tsx` |
 | Tableau de bord premium (sidebar, topbar, transitions) | ✅ implémenté | `apps/teralynk/src/components/Shell.tsx` |
 | Catalogue dynamique distant (cartes publiées sans recompilation) | ✅ implémenté | `content/catalog.json` signé |
 | Recherche + filtres + tris réels sur le catalogue | ✅ implémentés | `apps/teralynk/src/lib/search.ts` |

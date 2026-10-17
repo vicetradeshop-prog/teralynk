@@ -11,11 +11,20 @@ import { ipcMain, shell, app, type BrowserWindow } from 'electron';
 import { z } from 'zod';
 import os from 'node:os';
 import { loadCatalog, loadAnnouncements, loadPolls, clearContentCache } from './services/content';
-import { runUpdateGate, downloadAndInstallUpdate, quitAndInstall } from './services/updates';
+import { runUpdateGate, downloadAndInstallUpdate, installDownloadedUpdate } from './services/updates';
 import { detectRuntimes } from './services/scripts/runtimes';
 import { prepareScript, executePrepared, stopRun } from './services/scripts/executor';
 import { fetchPollResults, castGithubVote, storeUserGithubToken, clearUserGithubToken, userTokenStatus } from './services/polls';
-import { musicStatus, installSpotdl, pickFolder, downloadMusic, stopMusic, defaultMusicFolder } from './services/music/spotdl';
+import {
+  musicStatus,
+  installSpotdl,
+  installFfmpeg,
+  pickFolder,
+  openFolder,
+  downloadMusic,
+  stopMusic,
+  defaultMusicFolder
+} from './services/music/spotdl';
 import { loadPrefs, savePrefs, resetPrefs, type Prefs } from './services/prefs';
 import { checkGitHubReachable } from './services/net';
 import { logsDirectory, log } from './services/logger';
@@ -99,8 +108,9 @@ export function registerIpcHandlers(getWindow: () => BrowserWindow | null): void
   });
 
   ipcMain.handle('updates:install-now', () => {
-    quitAndInstall();
-    return { ok: true };
+    const window = getWindow();
+    if (!window) return { ok: false, error: 'Fenêtre indisponible.' };
+    return installDownloadedUpdate(window);
   });
 
   /* ---------------- Contenu distant ---------------- */
@@ -175,6 +185,59 @@ export function registerIpcHandlers(getWindow: () => BrowserWindow | null): void
     const parsed = z.string().uuid().safeParse(runId);
     if (!parsed.success) return { ok: false, message: 'Identifiant d’exécution invalide.' };
     return stopRun(parsed.data);
+  });
+
+  /* ---------------- Musique (spotdl) — CORRECTION v1.5.0 ----------------
+   * Ces handlers ÉTAIENT ABSENTS : le preload exposait music.* mais aucun
+   * canal n'était enregistré côté main → « Installer spotdl », « Dossier… »
+   * et le téléchargement échouaient silencieusement (No handler registered).
+   * Chaque payload est validé par zod, comme le reste de la surface IPC.
+   */
+
+  ipcMain.handle('music:status', () => musicStatus());
+
+  ipcMain.handle('music:default-folder', () => ({ ok: true, folder: defaultMusicFolder() }));
+
+  ipcMain.handle('music:pick-folder', async () => {
+    const window = getWindow();
+    if (!window) return { ok: false, message: 'Fenêtre indisponible.' };
+    return pickFolder(window);
+  });
+
+  ipcMain.handle('music:open-folder', async (_event, folder: unknown) => {
+    const parsed = z.string().min(3).max(260).safeParse(folder);
+    if (!parsed.success) return { ok: false, message: 'Chemin de dossier invalide.' };
+    return openFolder(parsed.data);
+  });
+
+  ipcMain.handle('music:install', async (_event, payload: unknown) => {
+    const parsed = z.object({ confirmed: z.literal(true) }).safeParse(payload);
+    if (!parsed.success) return { ok: false, message: 'Consentement explicite requis pour installer spotdl.' };
+    const window = getWindow();
+    if (!window) return { ok: false, message: 'Fenêtre indisponible.' };
+    return installSpotdl(window, true);
+  });
+
+  ipcMain.handle('music:install-ffmpeg', async (_event, payload: unknown) => {
+    const parsed = z.object({ confirmed: z.literal(true) }).safeParse(payload);
+    if (!parsed.success) return { ok: false, message: 'Consentement explicite requis pour installer ffmpeg.' };
+    const window = getWindow();
+    if (!window) return { ok: false, message: 'Fenêtre indisponible.' };
+    return installFfmpeg(window, true);
+  });
+
+  ipcMain.handle('music:download', async (_event, payload: unknown) => {
+    const parsed = z.object({ url: z.string().min(1).max(2048), folder: z.string().min(3).max(260) }).safeParse(payload);
+    if (!parsed.success) return { ok: false, message: 'Requête de téléchargement invalide.' };
+    const window = getWindow();
+    if (!window) return { ok: false, message: 'Fenêtre indisponible.' };
+    return downloadMusic(window, { url: parsed.data.url, folder: parsed.data.folder });
+  });
+
+  ipcMain.handle('music:stop', (_event, runId: unknown) => {
+    const parsed = z.string().uuid().safeParse(runId);
+    if (!parsed.success) return { ok: false, message: 'Identifiant d’exécution invalide.' };
+    return stopMusic(parsed.data);
   });
 
   /* ---------------- Sondages ---------------- */

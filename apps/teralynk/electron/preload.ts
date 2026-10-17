@@ -7,7 +7,14 @@
 import { contextBridge, ipcRenderer } from 'electron';
 
 /** Écoute d'événements autorisée : canaux strictement limités. */
-const ALLOWED_EVENT_CHANNELS = ['updates:progress', 'updates:error', 'updates:downloaded', 'scripts:event', 'music:event'] as const;
+const ALLOWED_EVENT_CHANNELS = [
+  'updates:progress',
+  'updates:error',
+  'updates:downloaded',
+  'updates:installing',
+  'scripts:event',
+  'music:event'
+] as const;
 type EventChannel = (typeof ALLOWED_EVENT_CHANNELS)[number];
 
 const api = {
@@ -56,7 +63,9 @@ const api = {
     status: () => ipcRenderer.invoke('music:status'),
     defaultFolder: () => ipcRenderer.invoke('music:default-folder'),
     pickFolder: () => ipcRenderer.invoke('music:pick-folder'),
+    openFolder: (folder: string) => ipcRenderer.invoke('music:open-folder', folder),
     install: () => ipcRenderer.invoke('music:install', { confirmed: true }),
+    installFfmpeg: () => ipcRenderer.invoke('music:install-ffmpeg', { confirmed: true }),
     download: (url: string, folder: string) => ipcRenderer.invoke('music:download', { url, folder }),
     stop: (runId: string) => ipcRenderer.invoke('music:stop', runId),
     onEvent: (listener: (event: unknown) => void): (() => void) => {

@@ -187,3 +187,93 @@
   overflow-x: auto;
   user-select: text;
 }
+
+/* ============== v1.5.0 — écran « Redémarrage en cours » ============== */
+/* Rotation simple (icônes de rafraîchissement pendant une action réelle) */
+.tl-spin { animation: tl-gear 1.4s linear infinite; }
+
+/* Panneau affiché UNIQUEMENT quand electron-updater a confirmé qu'il quitte
+   pour installer (événement before-quit-for-update) : plus de faux espoir. */
+.tl-gate-restarting {
+  width: 100%;
+  display: flex; flex-direction: column; align-items: center; gap: 8px;
+  padding: 18px 20px;
+  border-radius: var(--tl-radius-md);
+  border: 1px solid rgba(110, 86, 248, 0.45);
+  background: linear-gradient(160deg, rgba(110, 86, 248, 0.12), rgba(56, 189, 248, 0.06));
+  color: var(--tl-text);
+  font-size: var(--tl-text-sm);
+  text-align: center;
+  animation: tl-restart-glow 1.8s var(--tl-ease-soft) infinite;
+}
+@keyframes tl-restart-glow {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(110, 86, 248, 0.25); }
+  50% { box-shadow: 0 0 24px 2px rgba(110, 86, 248, 0.28); }
+}
+/* Triple anneau orbital : signe visuel fort du handover à l'installateur */
+.tl-gate-restart-ring { position: relative; width: 46px; height: 46px; }
+.tl-gate-restart-ring span {
+  position: absolute; inset: 0;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  border-top-color: var(--tl-accent-bright);
+  animation: tl-gear 1.15s linear infinite;
+}
+.tl-gate-restart-ring span:nth-child(2) {
+  inset: 6px;
+  border-top-color: rgba(56, 189, 248, 0.9);
+  animation-duration: 1.5s;
+  animation-direction: reverse;
+}
+.tl-gate-restart-ring span:nth-child(3) {
+  inset: 12px;
+  border-top-color: rgba(167, 139, 250, 0.8);
+  animation-duration: 0.9s;
+}
+
+/* ============== v1.5.0 — mise en valeur du nouveau logo ============== */
+/* Aurora conique tournante derrière le cœur du logo */
+.tl-logo-wrap::before {
+  content: '';
+  position: absolute;
+  inset: -34px;
+  border-radius: 50%;
+  background: conic-gradient(
+    from 0deg,
+    rgba(139, 92, 246, 0),
+    rgba(139, 92, 246, 0.35),
+    rgba(56, 189, 248, 0.3),
+    rgba(236, 72, 153, 0.22),
+    rgba(139, 92, 246, 0)
+  );
+  filter: blur(18px);
+  animation: tl-gear 9s linear infinite;
+  opacity: 0.85;
+  pointer-events: none;
+}
+/* Particules en orbite autour du logo */
+.tl-logo-orbit {
+  position: absolute;
+  inset: -10px;
+  animation: tl-gear 6s linear infinite;
+  pointer-events: none;
+}
+.tl-logo-orbit i {
+  position: absolute;
+  top: 50%; left: -2px;
+  width: 5px; height: 5px;
+  border-radius: 50%;
+  background: #7dd3fc;
+  box-shadow: 0 0 10px 2px rgba(125, 211, 252, 0.7);
+}
+.tl-logo-orbit.rev {
+  inset: -22px;
+  animation-direction: reverse;
+  animation-duration: 8.5s;
+}
+.tl-logo-orbit.rev i {
+  background: #c4b5fd;
+  box-shadow: 0 0 10px 2px rgba(196, 181, 252, 0.7);
+}
+/* Halo plus profond sous le marque SVG */
+.tl-logo-core svg { filter: drop-shadow(0 4px 14px rgba(139, 92, 246, 0.45)); }

@@ -2,7 +2,7 @@
  * Jeu d'icônes Teralynk — SVG inline cohérents (trait 1.8, 24×24).
  * Aucune dépendance externe : rendu net et instantané.
  */
-import type { SVGProps } from 'react';
+import { useId, type SVGProps } from 'react';
 
 type IconProps = SVGProps<SVGSVGElement> & { size?: number };
 
@@ -20,15 +20,48 @@ function base({ size = 20, ...props }: IconProps) {
   };
 }
 
-/** Marque Teralynk : deux nœuds reliés (lien) dans un hexagone (structure). */
-export function TeralynkMark(props: IconProps) {
+/**
+ * Marque Teralynk v1.5.0 : hexagone de verre iridescent + deux nœuds reliés
+ * par un faisceau lumineux — déclinée en SVG inline du nouvel icône
+ * (dégradé violet → cyan, halo, reflets). Rendu net à toutes les tailles.
+ */
+export function TeralynkMark({ size = 20, ...props }: IconProps) {
+  const rawId = useId();
+  const gid = `tlg${rawId.replace(/[^a-zA-Z0-9]/g, '')}`;
   return (
-    <svg {...base({ fill: 'none', ...props })} strokeWidth={1.6}>
-      <path d="M12 2.6 20.2 7.3v9.4L12 21.4 3.8 16.7V7.3z" stroke="currentColor" strokeWidth={1.4} opacity={0.55} />
-      <circle cx="9" cy="10" r="2.1" fill="currentColor" stroke="none" />
-      <circle cx="15" cy="14" r="2.1" fill="currentColor" stroke="none" />
-      <path d="M10.6 11.2 13.4 12.8" stroke="currentColor" strokeWidth={1.8} />
-      <path d="M12 6.4v2M12 15.6v2" stroke="currentColor" strokeWidth={1.2} opacity={0.6} />
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden {...props}>
+      <defs>
+        <linearGradient id={`${gid}a`} x1="4" y1="4.5" x2="20" y2="19.5" gradientUnits="userSpaceOnUse">
+          <stop offset="0" stopColor="#a78bfa" />
+          <stop offset="0.45" stopColor="#8b5cf6" />
+          <stop offset="1" stopColor="#38bdf8" />
+        </linearGradient>
+        <linearGradient id={`${gid}b`} x1="8" y1="9" x2="16" y2="15" gradientUnits="userSpaceOnUse">
+          <stop offset="0" stopColor="#c4b5fd" />
+          <stop offset="1" stopColor="#7dd3fc" />
+        </linearGradient>
+        <filter id={`${gid}f`} x="-60%" y="-60%" width="220%" height="220%">
+          <feGaussianBlur stdDeviation="1.4" />
+        </filter>
+      </defs>
+      {/* halo diffus derrière l'hexagone */}
+      <path d="M12 2.7 20.1 7.35v9.3L12 21.3 3.9 16.65v-9.3z" stroke={`url(#${gid}a)`} strokeWidth="2.4" opacity="0.4" filter={`url(#${gid}f)`} />
+      {/* hexagone de verre */}
+      <path d="M12 2.7 20.1 7.35v9.3L12 21.3 3.9 16.65v-9.3z" stroke={`url(#${gid}a)`} strokeWidth="1.55" strokeLinejoin="round" />
+      {/* reflet supérieur du verre */}
+      <path d="M12 4.1 18.6 7.9" stroke="#ffffff" strokeWidth="0.9" strokeLinecap="round" opacity="0.5" />
+      {/* faisceau reliant les deux nœuds */}
+      <path d="M10.35 10.95 13.65 13.05" stroke={`url(#${gid}b)`} strokeWidth="1.7" strokeLinecap="round" />
+      <path d="M10.35 10.95 13.65 13.05" stroke={`url(#${gid}b)`} strokeWidth="3" strokeLinecap="round" opacity="0.35" filter={`url(#${gid}f)`} />
+      {/* nœud violet */}
+      <circle cx="9" cy="10" r="2.15" fill={`url(#${gid}a)`} />
+      <circle cx="8.35" cy="9.35" r="0.65" fill="#ffffff" opacity="0.75" />
+      {/* nœud cyan */}
+      <circle cx="15" cy="14" r="2.15" fill={`url(#${gid}a)`} />
+      <circle cx="14.35" cy="13.35" r="0.65" fill="#ffffff" opacity="0.75" />
+      {/* étincelles */}
+      <circle cx="16.6" cy="8.2" r="0.5" fill="#7dd3fc" opacity="0.9" />
+      <circle cx="7.2" cy="15.6" r="0.42" fill="#c4b5fd" opacity="0.8" />
     </svg>
   );
 }

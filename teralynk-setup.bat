@@ -7,13 +7,19 @@ if not exist "%WORKDIR%\package.json" set "WORKDIR=%~dp0"
 cd /d "%WORKDIR%" || goto :fail
 
 :: ---- detection automatique du dossier source le plus recent (Downloads ou C:\v120)
+:: bat v5 : tri NUMERIQUE de version (1.10.0 > 1.9.0), pas un tri alphabetique inversé.
 set "SRCDIR="
 if exist "C:\v120\package.json" set "SRCDIR=C:\v120"
-if not defined SRCDIR for /f "delims=" %%d in ('dir /b /ad /o-n "%DL%\teralynk-v1.*" 2^>nul') do if not defined SRCDIR if exist "%DL%\%%d\package.json" set "SRCDIR=%DL%\%%d"
+if not defined SRCDIR goto :detect
+goto :detected
+:detect
+> "%TEMP%\tl-src.ps1" echo Get-ChildItem -Directory -Path '%DL%' -Filter 'teralynk-v1.*' -ErrorAction SilentlyContinue ^| Where-Object { Test-Path (Join-Path $_.FullName 'package.json') } ^| ForEach-Object { $m = [regex]::Match($_.Name, 'v(\d+)\.(\d+)\.(\d+)'); $k = if ($m.Success) { [long]$m.Groups[1].Value * 100000000 + [long]$m.Groups[2].Value * 10000 + [long]$m.Groups[3].Value } else { 0 }; [pscustomobject]@{ K = $k; P = $_.FullName } } ^| Sort-Object K -Descending ^| Select-Object -First 1 -ExpandProperty P
+for /f "usebackq delims=" %%d in (`powershell -NoProfile -ExecutionPolicy Bypass -File "%TEMP%\tl-src.ps1" 2^>nul`) do set "SRCDIR=%%d"
+:detected
 
 echo.
 echo ============================================================
-echo   TERALYNK — PREPARATION COMPLETE (bat v4)
+echo   TERALYNK — PREPARATION COMPLETE (bat v5)
 echo   Dossier de travail : %WORKDIR%
 echo   Sources recentes   : %SRCDIR%
 echo ============================================================

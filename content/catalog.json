@@ -1,0 +1,43 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-10-17T11:56:36.957Z",
+  "cards": [
+    {
+      "id": "musique1",
+      "slug": "musique1",
+      "name": "Musique Téléchargement ",
+      "description": "Télécharge la musique que tu veux quand tu veux via le lien, Spotify, youtube musique, deezer...",
+      "category": "Musique ",
+      "icon": "download",
+      "tags": [
+        "Musique",
+        "Téléchargement",
+        "gratuit"
+      ],
+      "version": "1.0.0",
+      "status": "available",
+      "platforms": [
+        "windows"
+      ],
+      "requirements": [
+        "AutoSpotdl"
+      ],
+      "permissions": [
+        "Aucun"
+      ],
+      "capabilities": [
+        ">Installation---Spotdl----Download---dossier--ouvrir..."
+      ],
+      "knownRisks": [
+        "Aucun"
+      ],
+      "riskLevel": "low",
+      "featureUi": "music-downloader",
+      "releaseNotes": "1.0.0 Version no Bugs",
+      "featured": false,
+      "enabled": true,
+      "createdAt": "2026-10-17T11:51:02.317Z",
+      "updatedAt": "2026-10-17T11:56:07.948Z"
+    }
+  ]
+}

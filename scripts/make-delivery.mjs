@@ -47,6 +47,20 @@ for (const rel of pkgFiles) {
 }
 console.log(`Version ${version} synchronisée sur ${pkgFiles.length} packages.`);
 
+/* ---------------- 0bis. README de version OBLIGATOIRE (v1.5.0+) ----------------
+ * Chaque version livrée doit embarquer son README de version (changelog +
+ * procédure de publication) : README-v<version>.md à la racine du dépôt.
+ * Sans lui, la livraison est refusée — aucune zip ne part sans documentation.
+ */
+const versionReadme = path.join(root, `README-v${version}.md`);
+if (!existsSync(versionReadme)) {
+  console.error(`ERREUR : README-v${version}.md est absent de la racine du projet.`);
+  console.error('Chaque version livrée doit embarquer son README de version (changelog + procédure).');
+  console.error(`Créez le fichier README-v${version}.md puis relancez la livraison.`);
+  process.exit(1);
+}
+console.log(`README de version présent : README-v${version}.md`);
+
 /* ---------------- 1-4. Vérifications obligatoires ---------------- */
 
 const steps = [
@@ -118,6 +132,7 @@ const deliveryInfo = [
   `Date            : ${new Date().toISOString()}`,
   `Node            : ${process.version}`,
   `Fichiers livrés : ${files.length}`,
+  `README version  : README-v${version}.md (changelog + procédure de publication)`,
   '',
   'Vérifications exécutées avant production de ce ZIP :',
   '  [OK] npm run typecheck        (TypeScript strict, 3 packages)',

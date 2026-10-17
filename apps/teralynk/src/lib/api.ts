@@ -123,15 +123,18 @@ export interface MusicStatusView {
   pythonVersion?: string;
   spotdl: boolean;
   ffmpeg: boolean;
+  ffmpegSource?: 'system' | 'managed';
+  ffmpegPath?: string;
   platform: string;
 }
 
 export interface MusicEventView {
   runId: string;
-  type: 'step' | 'line' | 'stderr' | 'error' | 'exit';
+  type: 'step' | 'line' | 'stderr' | 'error' | 'exit' | 'progress';
   step?: 'link' | 'ready' | 'download' | 'convert' | 'done';
   text?: string;
   code?: number | null;
+  percent?: number;
   at: string;
 }
 
@@ -154,7 +157,7 @@ declare global {
       updates: {
         check(channel?: ReleaseChannel): Promise<UpdateGateView>;
         download(): Promise<{ started: boolean; error?: string }>;
-        installNow(): Promise<{ ok: boolean }>;
+        installNow(): Promise<{ ok: boolean; error?: string }>;
       };
       content: {
         catalog(): Promise<ContentResponse<CatalogManifest>>;
@@ -178,7 +181,9 @@ declare global {
         status(): Promise<MusicStatusView>;
         defaultFolder(): Promise<{ ok: boolean; folder?: string }>;
         pickFolder(): Promise<{ ok: boolean; folder?: string; cancelled?: boolean; message?: string }>;
+        openFolder(folder: string): Promise<{ ok: boolean; message?: string }>;
         install(): Promise<{ ok: boolean; message?: string }>;
+        installFfmpeg(): Promise<{ ok: boolean; message?: string }>;
         download(url: string, folder: string): Promise<{ ok: boolean; runId?: string; message?: string }>;
         stop(runId: string): Promise<{ ok: boolean; message?: string }>;
         onEvent(listener: (event: MusicEventView) => void): () => void;
