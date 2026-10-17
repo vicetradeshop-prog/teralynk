@@ -188,6 +188,14 @@ export async function listReleases(token: string): Promise<GitHubRelease[]> {
   return expectOk<GitHubRelease[]>(`${API}/repos/${repoOwner}/${repoName}/releases?per_page=30`, token);
 }
 
+export async function getReleaseById(token: string, releaseId: number): Promise<GitHubRelease | null> {
+  const { repoOwner, repoName } = getConfig();
+  const { status, data } = await request<GitHubRelease>(`${API}/repos/${repoOwner}/${repoName}/releases/${releaseId}`, token);
+  if (status === 404) return null;
+  if (status !== 200 || !data) throw new GitHubApiError(`Lecture de la release ${releaseId} impossible (HTTP ${status}).`, status);
+  return data;
+}
+
 export async function getReleaseByTag(token: string, tag: string): Promise<GitHubRelease | null> {
   const { repoOwner, repoName } = getConfig();
   const { status, data } = await request<GitHubRelease>(`${API}/repos/${repoOwner}/${repoName}/releases/tags/${encodeURIComponent(tag)}`, token);

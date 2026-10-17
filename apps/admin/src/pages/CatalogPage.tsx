@@ -31,12 +31,28 @@ const ICON_CHOICES = ['sparkles', 'terminal', 'wrench', 'flask', 'shield', 'glob
 
 function emptyCard(): FeatureCard {
   const now = new Date().toISOString();
+  // Objet brut : la validation stricte se fait en direct dans l'éditeur et à
+  // l'enregistrement. Un .parse() sur champs vides lèverait une exception et
+  // tuerait silencieusement le clic sur « Nouvelle carte ».
   return {
-    id: '', slug: '', name: '', description: '', category: '',
-    icon: 'sparkles', tags: [], status: 'soon', platforms: ['windows'],
-    requirements: [], permissions: [], capabilities: [], knownRisks: [],
-    riskLevel: 'low', featured: false, enabled: false,
-    createdAt: now, updatedAt: now
+    id: '',
+    slug: '',
+    name: '',
+    description: '',
+    category: '',
+    icon: 'sparkles',
+    tags: [],
+    status: 'soon',
+    platforms: ['windows'],
+    requirements: [],
+    permissions: [],
+    capabilities: [],
+    knownRisks: [],
+    riskLevel: 'low',
+    featured: false,
+    enabled: false,
+    createdAt: now,
+    updatedAt: now
   } as FeatureCard;
 }
 

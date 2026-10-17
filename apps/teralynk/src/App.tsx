@@ -21,7 +21,6 @@ import { AnnouncementsPage, isAnnouncementActive } from '@/pages/AnnouncementsPa
 import { PollsPage } from '@/pages/PollsPage';
 import { HistoryPage } from '@/pages/HistoryPage';
 import { SettingsPage } from '@/pages/SettingsPage';
-import { AboutPage } from '@/pages/AboutPage';
 import { CardDetailModal, RunPrepareModal } from '@/features/CardDetail';
 import { RunConsole } from '@/features/RunConsole';
 import { useAnnouncements, useCatalog, usePolls, usePrefs, useApplyVisualPrefs } from '@/hooks/useData';
@@ -226,8 +225,6 @@ function AppInner() {
             }}
           />
         );
-      case 'about':
-        return <AboutPage systemInfo={systemInfo} />;
     }
   })();
 

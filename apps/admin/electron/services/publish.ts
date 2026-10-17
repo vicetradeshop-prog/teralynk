@@ -29,8 +29,8 @@ import {
 } from '@teralynk/shared';
 import { signManifest, sha256Hex } from '@teralynk/shared/node';
 import {
-  createRelease, deleteRelease, getReleaseByTag, listReleases, readFile, updateRelease,
-  uploadAsset, writeFile, GitHubApiError, type GitHubRelease
+  createRelease, deleteRelease, getReleaseById, getReleaseByTag, listReleases, readFile,
+  updateRelease, uploadAsset, writeFile, GitHubApiError, type GitHubRelease
 } from './github';
 import { extractPackageForPublish, inspectZip, type ZipInspection } from './zip-inspect';
 import { addLog, getConfig, readSigningKey } from './vault';
@@ -167,8 +167,16 @@ export async function publishRelease(
     step('conflict-check');
     const existingReleases = await listReleases(token);
     const conflictingTag = tag(version);
-    const existing = await getReleaseByTag(token, conflictingTag);
+    // Les BROUILLONS inclus : un vestige de tentative échouée doit être vu et nommé.
+    const existing = existingReleases.find((r) => r.tag_name === conflictingTag);
     if (existing) {
+      if (existing.draft) {
+        return fail(
+          'conflict-check',
+          `Une release BROUILLON avec le tag ${conflictingTag} existe déjà (vestige d’une tentative échouée).`,
+          `Supprimez-la : Versions et mises à jour → table Releases → corbeille sur la ligne ${conflictingTag}, puis relancez la publication.`
+        );
+      }
       return fail(
         'conflict-check',
         `La version ${version} (tag ${conflictingTag}) existe déjà sur GitHub.`,
@@ -202,7 +210,6 @@ export async function publishRelease(
         'Incrémentez le numéro de version. Aucune release existante n’est écrasée silencieusement.'
       );
     }
-    void existingReleases;
     step('conflict-check', 100);
 
     /* 6. Signature du manifeste */
@@ -270,7 +277,8 @@ export async function publishRelease(
 
     /* 9. Vérification des assets sur GitHub */
     step('verify-assets');
-    const afterUpload = (await listReleases(token)).find((r) => r.id === draft.id) ?? null;
+    // Par IDENTIFIANT : l'endpoint par tag répond 404 tant que la release est en brouillon.
+    const afterUpload = await getReleaseById(token, draft.id);
     const remoteNames = new Set((afterUpload?.assets ?? []).map((a) => a.name));
     const missingAssets = files.filter((f) => !remoteNames.has(f.name)).map((f) => f.name);
     if (missingAssets.length > 0) {

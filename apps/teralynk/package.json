@@ -1,7 +1,7 @@
 {
   "name": "@teralynk/app",
   "productName": "Teralynk",
-  "version": "1.1.0",
+  "version": "1.2.1",
   "private": true,
   "description": "Teralynk — application desktop premium : catalogue de scripts et d'outils distribué via GitHub.",
   "main": "dist-electron/main.js",

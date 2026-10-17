@@ -1,64 +1,60 @@
 /* ==================================================================
-   TERALYNK DESIGN SYSTEM
-   Identité : dark premium, glassmorphism, violet électrique,
-   dégradés subtils, profondeur et animations fluides.
-   Toutes les couleurs sont centralisées ici — un nouveau thème
-   n'exige que de nouvelles valeurs de variables.
+   TERALYNK DESIGN SYSTEM — v2
+   Identité : dark premium lisible, verre contrôlé, violet électrique,
+   dégradés subtils, profondeur et animations courtes et fluides.
+   Toutes les couleurs/effets sont centralisés ici : un thème = des variables.
    ================================================================== */
 
 :root {
-  /* ---- Palette de base : noir profond / graphite / anthracite ---- */
-  --tl-black: #07070c;
-  --tl-graphite-900: #0c0d14;
-  --tl-graphite-800: #12131c;
-  --tl-graphite-700: #181a26;
-  --tl-graphite-600: #1f2231;
-  --tl-anthracite: #262a3d;
-  --tl-line: rgba(255, 255, 255, 0.07);
-  --tl-line-strong: rgba(255, 255, 255, 0.13);
+  /* ---- Base : noirs profonds mais surfaces lisibles ---- */
+  --tl-black: #08090f;
+  --tl-graphite-900: #0d0e16;
+  --tl-graphite-800: #13141e;
+  --tl-graphite-700: #1a1c29;
+  --tl-graphite-600: #222536;
+  --tl-anthracite: #2b2f45;
+  --tl-line: rgba(255, 255, 255, 0.08);
+  --tl-line-strong: rgba(255, 255, 255, 0.15);
 
-  /* ---- Texte : blanc légèrement cassé ---- */
-  --tl-text: #eceaf4;
-  --tl-text-dim: #a7a5b8;
-  --tl-text-faint: #6f6d82;
+  /* ---- Texte : contraste renforcé ---- */
+  --tl-text: #f4f2fa;
+  --tl-text-dim: #b9b6ca;
+  --tl-text-faint: #807d94;
 
-  /* ---- Accent : violet électrique ---- */
-  --tl-violet: #8b5cf6;
-  --tl-violet-bright: #a78bfa;
-  --tl-violet-deep: #6d28d9;
-  --tl-violet-glow: rgba(139, 92, 246, 0.35);
-
-  /* ---- Bleu lumineux interactif ---- */
-  --tl-blue: #38bdf8;
-  --tl-blue-deep: #0ea5e9;
-  --tl-blue-glow: rgba(56, 189, 248, 0.3);
-
-  /* ---- Reflets irisés ---- */
-  --tl-iridescent: linear-gradient(120deg, #8b5cf6 0%, #38bdf8 45%, #e879f9 100%);
+  /* ---- Accents ---- */
+  --tl-violet: #8f66ff;
+  --tl-violet-bright: #b39dff;
+  --tl-violet-deep: #6d3df0;
+  --tl-violet-glow: rgba(143, 102, 255, 0.38);
+  --tl-blue: #45c4ff;
+  --tl-blue-deep: #18a5e8;
+  --tl-blue-glow: rgba(69, 196, 255, 0.32);
+  --tl-iridescent: linear-gradient(120deg, #8f66ff 0%, #45c4ff 48%, #f07dff 100%);
   --tl-accent-gradient: linear-gradient(135deg, var(--tl-violet) 0%, var(--tl-blue-deep) 100%);
 
   /* ---- Sémantiques ---- */
-  --tl-success: #34d399;
-  --tl-warning: #fbbf24;
-  --tl-danger: #f87171;
+  --tl-success: #3ddc97;
+  --tl-warning: #ffc53d;
+  --tl-danger: #ff6b6b;
   --tl-info: var(--tl-blue);
 
-  /* ---- Verre (glassmorphism) ---- */
-  --tl-glass-bg: rgba(24, 26, 38, 0.62);
-  --tl-glass-bg-hover: rgba(31, 34, 49, 0.72);
-  --tl-glass-border: rgba(255, 255, 255, 0.08);
-  --tl-glass-blur: blur(22px) saturate(1.4);
+  /* ---- Verre + repli solide si backdrop-filter indisponible ---- */
+  --tl-glass-bg: rgba(22, 24, 36, 0.72);
+  --tl-glass-bg-hover: rgba(29, 32, 47, 0.8);
+  --tl-glass-border: rgba(255, 255, 255, 0.09);
+  --tl-glass-blur: blur(18px) saturate(1.35);
+  --tl-solid-bg: #141622;
 
   /* ---- Profondeur ---- */
-  --tl-shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.35);
-  --tl-shadow-md: 0 8px 28px rgba(0, 0, 0, 0.45);
-  --tl-shadow-lg: 0 24px 64px rgba(0, 0, 0, 0.55);
-  --tl-shadow-glow: 0 0 32px var(--tl-violet-glow);
+  --tl-shadow-sm: 0 2px 10px rgba(0, 0, 0, 0.4);
+  --tl-shadow-md: 0 10px 30px rgba(0, 0, 0, 0.45);
+  --tl-shadow-lg: 0 26px 70px rgba(0, 0, 0, 0.55);
+  --tl-shadow-glow: 0 0 34px var(--tl-violet-glow);
 
   /* ---- Géométrie ---- */
-  --tl-radius-sm: 8px;
-  --tl-radius-md: 14px;
-  --tl-radius-lg: 20px;
+  --tl-radius-sm: 9px;
+  --tl-radius-md: 15px;
+  --tl-radius-lg: 21px;
   --tl-radius-xl: 28px;
   --tl-space-1: 4px;
   --tl-space-2: 8px;
@@ -71,50 +67,51 @@
   /* ---- Typographie ---- */
   --tl-font: 'Segoe UI Variable Display', 'Segoe UI', -apple-system, BlinkMacSystemFont, 'Inter', 'Helvetica Neue', Arial, sans-serif;
   --tl-font-mono: 'Cascadia Code', 'JetBrains Mono', Consolas, 'Courier New', monospace;
-  --tl-text-xs: 11px;
-  --tl-text-sm: 12.5px;
-  --tl-text-base: 14px;
-  --tl-text-md: 16px;
-  --tl-text-lg: 20px;
-  --tl-text-xl: 26px;
-  --tl-text-2xl: 34px;
+  --tl-text-xs: 11.5px;
+  --tl-text-sm: 13px;
+  --tl-text-base: 14.5px;
+  --tl-text-md: 16.5px;
+  --tl-text-lg: 21px;
+  --tl-text-xl: 28px;
+  --tl-text-2xl: 38px;
 
-  /* ---- Mouvement ---- */
+  /* ---- Mouvement : court et amorti ---- */
   --tl-ease: cubic-bezier(0.22, 1, 0.36, 1);
   --tl-ease-soft: cubic-bezier(0.4, 0, 0.2, 1);
-  --tl-dur-fast: 140ms;
-  --tl-dur-base: 240ms;
-  --tl-dur-slow: 480ms;
+  --tl-dur-fast: 120ms;
+  --tl-dur-base: 200ms;
+  --tl-dur-slow: 420ms;
 
-  /* ---- Intensité des effets (préférence utilisateur) ---- */
   --tl-effect-opacity: 1;
-  --tl-blur-scale: 1;
 }
 
-/* Préférence d'animation : réduite (système ou forcée) */
+/* Accessibilité : réduction de mouvement (système ou préférence app) */
 @media (prefers-reduced-motion: reduce) {
-  :root { --tl-motion-scale: 0; }
+  :root { --tl-motion: 0; }
 }
-html[data-motion='off'] { --tl-motion-scale: 0; }
-html[data-motion='on'] { --tl-motion-scale: 1; }
+html[data-motion='off'] { --tl-motion: 0; }
+html[data-motion='off'] *, html[data-motion='off'] *::before, html[data-motion='off'] *::after {
+  animation-duration: 0.001s !important;
+  transition-duration: 0.001s !important;
+}
 
-/* Intensité visuelle */
-html[data-intensity='subtle'] { --tl-effect-opacity: 0.55; }
+/* Intensité des effets */
+html[data-intensity='subtle'] { --tl-effect-opacity: 0.5; }
 html[data-intensity='rich'] { --tl-effect-opacity: 1; }
 
-/* Thème d'accent alternatif */
+/* Thèmes d'accent */
 html[data-accent='blue'] {
-  --tl-violet: #0ea5e9;
-  --tl-violet-bright: #38bdf8;
-  --tl-violet-deep: #0369a1;
-  --tl-violet-glow: rgba(56, 189, 248, 0.35);
-  --tl-accent-gradient: linear-gradient(135deg, #0ea5e9 0%, #8b5cf6 100%);
+  --tl-violet: #18a5e8;
+  --tl-violet-bright: #6fd4ff;
+  --tl-violet-deep: #0b7ab8;
+  --tl-violet-glow: rgba(69, 196, 255, 0.36);
+  --tl-accent-gradient: linear-gradient(135deg, #18a5e8 0%, #8f66ff 100%);
 }
 html[data-accent='iridescent'] {
-  --tl-violet: #c084fc;
-  --tl-violet-bright: #e879f9;
+  --tl-violet: #c77dff;
+  --tl-violet-bright: #e59fff;
   --tl-accent-gradient: var(--tl-iridescent);
-  --tl-violet-glow: rgba(232, 121, 249, 0.32);
+  --tl-violet-glow: rgba(240, 125, 255, 0.34);
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -133,20 +130,19 @@ body {
   user-select: none;
 }
 
-::selection { background: rgba(139, 92, 246, 0.35); }
+::selection { background: rgba(143, 102, 255, 0.4); }
 
-/* ---- Barres de défilement discrètes ---- */
 ::-webkit-scrollbar { width: 10px; height: 10px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.14);
   border-radius: 8px;
   border: 2px solid transparent;
   background-clip: content-box;
 }
-::-webkit-scrollbar-thumb:hover { background-color: rgba(255, 255, 255, 0.22); }
+::-webkit-scrollbar-thumb:hover { background-color: rgba(255, 255, 255, 0.24); }
 
-/* ---- Fond ambient : halos lumineux animés, profondeur ---- */
+/* ---- Fond ambient : halos doux, coût GPU maîtrisé ---- */
 .tl-ambient {
   position: fixed;
   inset: 0;
@@ -154,9 +150,9 @@ body {
   pointer-events: none;
   overflow: hidden;
   background:
-    radial-gradient(1200px 800px at 15% -10%, rgba(109, 40, 217, calc(0.16 * var(--tl-effect-opacity))), transparent 60%),
-    radial-gradient(1000px 700px at 110% 20%, rgba(14, 165, 233, calc(0.1 * var(--tl-effect-opacity))), transparent 55%),
-    radial-gradient(900px 900px at 50% 120%, rgba(139, 92, 246, calc(0.08 * var(--tl-effect-opacity))), transparent 60%),
+    radial-gradient(1100px 700px at 12% -8%, rgba(109, 61, 240, calc(0.17 * var(--tl-effect-opacity))), transparent 62%),
+    radial-gradient(900px 620px at 108% 18%, rgba(24, 165, 232, calc(0.11 * var(--tl-effect-opacity))), transparent 58%),
+    radial-gradient(820px 820px at 50% 118%, rgba(143, 102, 255, calc(0.09 * var(--tl-effect-opacity))), transparent 62%),
     var(--tl-black);
 }
 .tl-ambient::before,
@@ -164,57 +160,79 @@ body {
   content: '';
   position: absolute;
   border-radius: 50%;
-  filter: blur(90px);
-  opacity: calc(0.5 * var(--tl-effect-opacity));
+  filter: blur(70px);
+  opacity: calc(0.42 * var(--tl-effect-opacity));
+  will-change: transform;
 }
 .tl-ambient::before {
-  width: 560px; height: 560px;
-  left: -120px; top: -140px;
-  background: radial-gradient(circle, rgba(139, 92, 246, 0.4), transparent 70%);
-  animation: tl-drift-a 26s ease-in-out infinite alternate;
+  width: 520px; height: 520px;
+  left: -110px; top: -130px;
+  background: radial-gradient(circle, rgba(143, 102, 255, 0.42), transparent 70%);
+  animation: tl-drift-a 30s ease-in-out infinite alternate;
 }
 .tl-ambient::after {
-  width: 480px; height: 480px;
-  right: -100px; bottom: -160px;
-  background: radial-gradient(circle, rgba(56, 189, 248, 0.3), transparent 70%);
-  animation: tl-drift-b 32s ease-in-out infinite alternate;
+  width: 440px; height: 440px;
+  right: -90px; bottom: -150px;
+  background: radial-gradient(circle, rgba(69, 196, 255, 0.3), transparent 70%);
+  animation: tl-drift-b 36s ease-in-out infinite alternate;
 }
 @keyframes tl-drift-a {
   from { transform: translate3d(0, 0, 0) scale(1); }
-  to { transform: translate3d(90px, 70px, 0) scale(1.15); }
+  to { transform: translate3d(80px, 60px, 0) scale(1.12); }
 }
 @keyframes tl-drift-b {
-  from { transform: translate3d(0, 0, 0) scale(1.05); }
-  to { transform: translate3d(-80px, -60px, 0) scale(0.95); }
+  from { transform: translate3d(0, 0, 0) scale(1.04); }
+  to { transform: translate3d(-70px, -50px, 0) scale(0.96); }
 }
-html[data-motion='off'] .tl-ambient::before,
-html[data-motion='off'] .tl-ambient::after { animation: none; }
 
-/* ---- Surfaces verre ---- */
+/* ---- Surfaces verre, avec repli solide ---- */
 .tl-glass {
   background: var(--tl-glass-bg);
   border: 1px solid var(--tl-glass-border);
   border-radius: var(--tl-radius-lg);
-  backdrop-filter: var(--tl-glass-blur);
-  -webkit-backdrop-filter: var(--tl-glass-blur);
   box-shadow: var(--tl-shadow-md);
 }
+@supports (backdrop-filter: blur(12px)) {
+  .tl-glass {
+    backdrop-filter: var(--tl-glass-blur);
+    -webkit-backdrop-filter: var(--tl-glass-blur);
+  }
+}
+@supports not (backdrop-filter: blur(12px)) {
+  .tl-glass { background: var(--tl-solid-bg); }
+}
 
-/* ---- Titre de page ---- */
+/* ---- Titres ---- */
 .tl-page-title {
   font-size: var(--tl-text-xl);
-  font-weight: 650;
-  letter-spacing: -0.02em;
-  background: linear-gradient(180deg, #fff 30%, var(--tl-text-dim));
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  background: linear-gradient(180deg, #ffffff 34%, var(--tl-text-dim));
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
 }
-.tl-page-sub { color: var(--tl-text-dim); font-size: var(--tl-text-sm); margin-top: 2px; }
+.tl-page-sub { color: var(--tl-text-dim); font-size: var(--tl-text-sm); margin-top: 3px; }
 
-/* ---- Accessibilité : focus visible ---- */
 :focus-visible {
   outline: 2px solid var(--tl-violet-bright);
   outline-offset: 2px;
-  border-radius: 4px;
+  border-radius: 5px;
+}
+
+/* ---- Lien discret (pied de page Paramètres) ---- */
+.tl-link {
+  background: none; border: none; padding: 0;
+  color: var(--tl-violet-bright);
+  font: inherit; font-size: var(--tl-text-xs);
+  cursor: pointer; text-decoration: underline; text-underline-offset: 3px;
+}
+.tl-link:hover { color: #fff; }
+
+/* ---- Pied de marque (Paramètres) ---- */
+.tl-brand-foot {
+  display: flex; align-items: center; gap: 14px;
+  padding: 18px 4px 30px;
+  color: var(--tl-text-dim);
+  font-size: var(--tl-text-sm);
 }

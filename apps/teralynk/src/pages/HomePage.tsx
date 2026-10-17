@@ -7,7 +7,7 @@ import { motion } from 'framer-motion';
 import type { Announcement, CatalogManifest, FeatureCard } from '@teralynk/shared';
 import { FeatureCard as FeatureCardView } from '@/components/FeatureCard';
 import { Badge, Button, EmptyState, ErrorState } from '@/components/ui';
-import { IconAlert, IconChevronRight, IconCompass, IconMegaphone, IconSparkles } from '@/components/Icons';
+import { IconAlert, IconChevronRight, IconCompass, IconMegaphone, IconSparkles, TeralynkMark } from '@/components/Icons';
 import type { ContentState } from '@/hooks/useData';
 import type { PageId } from '@/components/Shell';
 import type { UpdateGateView } from '@/lib/api';
@@ -86,17 +86,35 @@ export function HomePage({ catalog, topAnnouncement, offline, updateInfo, favori
         </motion.div>
       )}
 
-      {/* En-tête */}
-      <div className="tl-page-head">
-        <h1 className="tl-page-title">Bienvenue sur Teralynk</h1>
-        <p className="tl-page-sub">
-          {catalog.loading
-            ? 'Chargement du catalogue publié…'
-            : catalog.error
-              ? 'Catalogue indisponible pour le moment.'
-              : `${cards.filter((c) => c.enabled).length} fonctionnalités au catalogue · ${executableCount} exécutables depuis l’application`}
-        </p>
-      </div>
+      {/* Héros */}
+      <motion.section
+        className="tl-hero"
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+      >
+        <div className="tl-hero-row">
+          <div className="tl-hero-mark"><TeralynkMark size={34} /></div>
+          <div>
+            <h1>Bienvenue sur Teralynk</h1>
+            <p>Vos scripts et outils vérifiés, réunis dans une expérience unique — distribués officiellement via GitHub.</p>
+          </div>
+        </div>
+        <div className="tl-hero-stats">
+          {catalog.loading ? (
+            <span className="tl-stat"><span className="tl-spinner" style={{ width: 12, height: 12 }} /> Chargement du catalogue…</span>
+          ) : catalog.error ? (
+            <span className="tl-stat">Catalogue momentanément indisponible</span>
+          ) : (
+            <>
+              <span className="tl-stat"><b>{cards.filter((c) => c.enabled).length}</b> fonctionnalités</span>
+              <span className="tl-stat"><b>{executableCount}</b> exécutables</span>
+              <span className="tl-stat"><b>{cards.filter((c) => c.enabled && (c.status === 'new' || Date.now() - new Date(c.createdAt).getTime() < 7 * 864e5)).length}</b> nouveautés récentes</span>
+              <span className="tl-stat"><b>{cards.filter((c) => c.featured).length}</b> mises en avant</span>
+            </>
+          )}
+        </div>
+      </motion.section>
 
       {/* État d'erreur du catalogue */}
       {catalog.error && !catalog.loading && (

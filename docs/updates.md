@@ -67,6 +67,18 @@ signature Ed25519 du manifeste, et vérification de l'empreinte du script avant 
 exécution. Si un certificat est obtenu plus tard, electron-builder le prend en charge via la
 configuration `win.certificateFile` — sans changer l'architecture.
 
+## Artefact portable (secours si l'installateur est bloqué)
+
+`scripts/make-package.mjs` produit aussi, lorsque `release/win-unpacked/` existe,
+un ZIP **portable** `Teralynk-Portable-<version>.zip` : décompresser puis lancer
+`Teralynk\Teralynk.exe` — application complète sans installation NSIS.
+À privilégier sur les machines où SmartScreen/Defender bloque l'installateur
+non signé par un certificat acheté. Les mises à jour restent possibles via
+electron-updater dans une build installée ; en mode portable, une mise à jour
+se fait en remplaçant le dossier par celui de la version suivante.
+Cet artefact n'est PAS uploadé dans les releases GitHub (taille) : il sert à la
+distribution manuelle ou interne.
+
 ## Récupération après échec
 
 - Téléchargement interrompu : electron-updater ne remplace rien avant vérification ;

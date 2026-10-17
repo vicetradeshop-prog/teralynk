@@ -5,12 +5,12 @@
 import { useMemo, useState, type ReactNode } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
-  IconBell, IconCompass, IconHistory, IconHome, IconInfo, IconMegaphone,
+  IconBell, IconCompass, IconHistory, IconHome, IconMegaphone,
   IconPoll, IconSearch, IconSettings, IconStar, TeralynkMark
 } from '@/components/Icons';
 import type { UpdateGateView } from '@/lib/api';
 
-export type PageId = 'home' | 'explore' | 'favorites' | 'announcements' | 'polls' | 'history' | 'settings' | 'about';
+export type PageId = 'home' | 'explore' | 'favorites' | 'announcements' | 'polls' | 'history' | 'settings';
 
 export interface NavEntry {
   id: PageId;
@@ -44,8 +44,7 @@ export function Shell({ page, onNavigate, children, searchSlot, systemInfo, upda
   const secondary = useMemo<NavEntry[]>(
     () => [
       { id: 'history', label: 'Historique', icon: <IconHistory /> },
-      { id: 'settings', label: 'Paramètres', icon: <IconSettings /> },
-      { id: 'about', label: 'À propos de Teralynk', icon: <IconInfo /> }
+      { id: 'settings', label: 'Paramètres', icon: <IconSettings /> }
     ],
     []
   );
@@ -115,7 +114,7 @@ export function Shell({ page, onNavigate, children, searchSlot, systemInfo, upda
             initial={{ opacity: 0, y: 14, scale: 0.995 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -8, scale: 0.998 }}
-            transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
+            transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
           >
             {children}
           </motion.div>

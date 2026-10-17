@@ -60,7 +60,7 @@ export const FeatureCard = memo(function FeatureCard({ card, favorite, onOpen, o
   return (
     <motion.div
       ref={ref}
-      className={`tl-feature-card ${executable ? '' : 'is-disabled'}`}
+      className={`tl-feature-card ${executable ? '' : 'is-disabled'} ${card.featured ? 'is-featured' : ''}`}
       onMouseMove={onMouseMove}
       onClick={() => onOpen(card)}
       onKeyDown={(e) => {

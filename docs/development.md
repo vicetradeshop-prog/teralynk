@@ -29,6 +29,7 @@ npm install          # workspaces : packages/*, apps/*
 | `npm run dist:admin` | Installateur NSIS Windows (`apps/admin/release/`) |
 | `npm run gen:keys -- ./keys` | Génère la paire Ed25519 de signature |
 | `node scripts/make-package.mjs <dir> <version> [canal] [min]` | Paquet ZIP de publication |
+| `teralynk-setup.bat` (Windows, administrateur) | Assistants complet : exclusion Defender, fusion de sources, clé publique, `dist`, `make-package`, push Git, lancement de l'admin |
 | `node scripts/make-delivery.mjs <version>` | **Livraison** : typecheck + tests + builds, puis ZIP source versionné (`delivery/teralynk-v<version>.zip`) avec `SHA256SUMS.txt` |
 
 ### Routine de livraison (« à chaque fois »)

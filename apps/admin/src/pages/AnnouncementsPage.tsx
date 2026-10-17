@@ -35,11 +35,16 @@ const PRIORITY_LABELS: Record<string, string> = {
 };
 
 function emptyAnnouncement(): Announcement {
+  // Objet brut (voir emptyCard) : validation en direct dans l'éditeur.
   return {
     id: `a-${Date.now().toString(36)}`,
-    title: '', summary: '', body: '',
-    category: 'general', priority: 'normal',
-    publishedAt: new Date().toISOString(), published: true
+    title: '',
+    summary: '',
+    body: '',
+    category: 'general',
+    priority: 'normal',
+    publishedAt: new Date().toISOString(),
+    published: true
   } as Announcement;
 }
 

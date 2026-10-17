@@ -6,7 +6,7 @@
  * Usage : node scripts/build-electron.mjs <app|admin>
  */
 import { build } from 'esbuild';
-import { existsSync } from 'node:fs';
+import { existsSync, mkdirSync, copyFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -18,6 +18,19 @@ if (target !== 'app' && target !== 'admin') {
 }
 
 const appDir = target === 'app' ? path.join(root, 'apps/teralynk') : path.join(root, 'apps/admin');
+
+// Icône auto-réparatrice : si build/icon.png manque (dossiers exclus de certains
+// snapshots/stockages), on le restaure depuis la source canonique assets/logo-teralynk.png.
+function ensureIcon(appDir) {
+  const icon = path.join(appDir, 'build', 'icon.png');
+  const canonical = path.join(root, 'assets', 'logo-teralynk.png');
+  if (!existsSync(icon) && existsSync(canonical)) {
+    mkdirSync(path.dirname(icon), { recursive: true });
+    copyFileSync(canonical, icon);
+    console.log(`[build-electron] icône restaurée : ${path.relative(root, icon)}`);
+  }
+}
+ensureIcon(appDir);
 const entries = ['electron/main.ts', 'electron/preload.ts'].filter((e) => existsSync(path.join(appDir, e)));
 
 await build({
@@ -39,7 +52,6 @@ await build({
 });
 
 // Copie la clé publique de signature à côté du bundle (recherche dev + paquet).
-const { copyFileSync } = await import('node:fs');
 const pem = path.join(appDir, 'electron', 'signing-public-key.pem');
 if (existsSync(pem)) {
   copyFileSync(pem, path.join(appDir, 'dist-electron', 'signing-public-key.pem'));

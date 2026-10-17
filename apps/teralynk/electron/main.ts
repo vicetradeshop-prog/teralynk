@@ -77,6 +77,9 @@ function createMainWindow(): void {
     void mainWindow.loadFile(path.join(__dirname, '../dist/index.html'));
   }
 
+  mainWindow.on('close', () => {
+    console.log(`[app] événement close reçu à ${new Date().toISOString()}`);
+  });
   mainWindow.on('closed', () => {
     console.log('[app] fenêtre fermée');
     mainWindow = null;
@@ -85,18 +88,20 @@ function createMainWindow(): void {
 
 // CSP stricte en production : aucune source distante arbitraire pour l'UI.
 app.whenReady().then(() => {
-  session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
-    callback({
-      responseHeaders: {
-        ...details.responseHeaders,
-        'Content-Security-Policy': [
-          "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://raw.githubusercontent.com https://github.com; font-src 'self' data:; connect-src 'self' https://raw.githubusercontent.com https://api.github.com https://github.com; object-src 'none'; base-uri 'self'; frame-ancestors 'none'"
-        ]
-      }
+  // CSP stricte en PRODUCTION uniquement : en développement, Vite injecte des
+  // scripts inline et ouvre un websocket HMR que cette CSP casserait (page blanche).
+  if (!DEV_SERVER_URL) {
+    session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
+      callback({
+        responseHeaders: {
+          ...details.responseHeaders,
+          'Content-Security-Policy': [
+            "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://raw.githubusercontent.com https://github.com; font-src 'self' data:; connect-src 'self' https://raw.githubusercontent.com https://api.github.com https://github.com; object-src 'none'; base-uri 'self'; frame-ancestors 'none'"
+          ]
+        }
+      });
     });
-  });
-
-  // Permissions web (notifications, géoloc, etc.) : tout est refusé.
+  }
   session.defaultSession.setPermissionRequestHandler((_wc, _permission, callback) => callback(false));
 
   registerIpcHandlers(getMainWindow);

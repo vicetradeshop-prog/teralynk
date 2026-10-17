@@ -88,6 +88,20 @@ Cause : ZIP contenant le code du projet au lieu du paquet de publication.
 Action : produire le paquet avec `scripts/make-package.mjs` (installateur + latest.yml +
 `teralynk.package.json`).
 
+### L'installateur NSIS ne s'ouvre pas (double-clic sans effet)
+Cause usuelle : quarantaine silencieuse de Windows Defender ou SmartScreen
+(exécutable non signé par un certificat acheté).
+1. Vérifier l'intégrité : `certutil -hashfile Teralynk-Setup-X.Y.Z.exe SHA256` et comparer
+   à l'empreinte publiée dans `versions/stable.json` (champ `files`).
+2. Liste des quarantaines (cmd en administrateur) :
+   `"%ProgramFiles%\Windows Defender\MpCmdRun.exe" -Restore -ListAll`
+   puis restaurer : `"%ProgramFiles%\Windows Defender\MpCmdRun.exe" -Restore -All`
+3. Éviter la récidive sur le dossier de build (développement uniquement) :
+   `"%ProgramFiles%\Windows Defender\MpCmdRun.exe" -AddExclusionPath <dossier release>`
+4. Si le fichier a été téléchargé : clic droit → Propriétés → « Débloquer ».
+5. Secours immédiat : artefact portable `Teralynk-Portable-X.Y.Z.zip`
+   (dézipper, lancer `Teralynk\Teralynk.exe`) — voir docs/updates.md.
+
 ### SmartScreen / avertissement Windows à l'installation
 Cause réelle : installateurs non signés par un certificat de code acheté (voir
 `docs/updates.md` §Signature de code Windows). L'intégrité est vérifiable via les empreintes

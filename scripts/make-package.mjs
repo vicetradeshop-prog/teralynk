@@ -123,5 +123,35 @@ await new Promise((resolve, reject) => {
 
 // Le fichier de métadonnées reste aussi à côté pour inspection ; le ZIP est autonome.
 console.log(`\nPaquet prêt : ${outZip}`);
+
+/* 5. Artefact PORTABLE optionnel : si win-unpacked existe, produire un ZIP
+   portable (exécution directe de Teralynk.exe, sans installateur NSIS).
+   Utile quand un antivirus/SmartScreen bloque l'installateur non signé.
+   Non inclus dans le paquet de publication (trop lourd pour une release). */
+const unpackedDir = path.join(dir, 'win-unpacked');
+if (existsSync(unpackedDir) && statSync(unpackedDir).isDirectory()) {
+  const portableZip = path.resolve(path.join(dir, `Teralynk-Portable-${version}.zip`));
+  const pzip = new yazl.ZipFile();
+  const walk = (root, prefix) => {
+    for (const name of readdirSync(root)) {
+      const full = path.join(root, name);
+      const rel = `${prefix}${name}`;
+      if (statSync(full).isDirectory()) walk(full, `${rel}/`);
+      else pzip.addFile(full, rel);
+    }
+  };
+  walk(unpackedDir, 'Teralynk/');
+  pzip.end();
+  await new Promise((resolve, reject) => {
+    const out = createWriteStream(portableZip);
+    pzip.outputStream.pipe(out);
+    out.on('close', resolve);
+    out.on('error', reject);
+    pzip.outputStream.on('error', reject);
+  });
+  console.log(`Portable prêt : ${portableZip}  (dézipper puis lancer Teralynk\\Teralynk.exe)`);
+} else {
+  console.log('Portable : win-unpacked absent — artefact portable non produit.');
+}
 console.log('Sélectionnez-le dans Teralynk Admin → Versions et mises à jour → Publier une version.');
 

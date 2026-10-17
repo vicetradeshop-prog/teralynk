@@ -87,6 +87,9 @@ function createMainWindow(): void {
     void mainWindow.loadFile(path.join(__dirname, '../dist/index.html'));
   }
 
+  mainWindow.on('close', () => {
+    console.log(`[admin] événement close reçu à ${new Date().toISOString()}`);
+  });
   mainWindow.on('closed', () => {
     console.log('[admin] fenêtre fermée');
     mainWindow = null;
@@ -107,16 +110,20 @@ if (!app.requestSingleInstanceLock()) {
 }
 
 app.whenReady().then(() => {
-  session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
-    callback({
-      responseHeaders: {
-        ...details.responseHeaders,
-        'Content-Security-Policy': [
-          "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://raw.githubusercontent.com; font-src 'self' data:; connect-src 'self' https://api.github.com https://github.com https://raw.githubusercontent.com; object-src 'none'; base-uri 'self'; frame-ancestors 'none'"
-        ]
-      }
+  // CSP stricte en PRODUCTION uniquement : en développement, Vite injecte des
+  // scripts inline et ouvre un websocket HMR que cette CSP casserait (page blanche).
+  if (!DEV_SERVER_URL) {
+    session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
+      callback({
+        responseHeaders: {
+          ...details.responseHeaders,
+          'Content-Security-Policy': [
+            "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://raw.githubusercontent.com; font-src 'self' data:; connect-src 'self' https://api.github.com https://github.com https://raw.githubusercontent.com; object-src 'none'; base-uri 'self'; frame-ancestors 'none'"
+          ]
+        }
+      });
     });
-  });
+  }
   session.defaultSession.setPermissionRequestHandler((_wc, _permission, callback) => callback(false));
 
   registerAdminIpc(getMainWindow);
