@@ -31,17 +31,13 @@ const ICON_CHOICES = ['sparkles', 'terminal', 'wrench', 'flask', 'shield', 'glob
 
 function emptyCard(): FeatureCard {
   const now = new Date().toISOString();
-  return featureCardSchema.parse({
-    id: '',
-    slug: '',
-    name: '',
-    description: '',
-    category: '',
-    status: 'soon',
-    platforms: ['windows'],
-    createdAt: now,
-    updatedAt: now
-  });
+  return {
+    id: '', slug: '', name: '', description: '', category: '',
+    icon: 'sparkles', tags: [], status: 'soon', platforms: ['windows'],
+    requirements: [], permissions: [], capabilities: [], knownRisks: [],
+    riskLevel: 'low', featured: false, enabled: false,
+    createdAt: now, updatedAt: now
+  } as FeatureCard;
 }
 
 /** Convertit un nom en slug/identifiant kebab-case. */

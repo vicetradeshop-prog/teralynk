@@ -28,20 +28,14 @@ function emptyPoll(): Poll {
   const now = new Date();
   const start = new Date(now.getTime() + 3600_000);
   const end = new Date(now.getTime() + 14 * 86400_000);
-  return pollSchema.parse({
+  return {
     id: `poll-${now.getTime().toString(36)}`,
-    title: '',
-    description: '',
-    options: [
-      { id: 'opt-1', label: '' },
-      { id: 'opt-2', label: '' }
-    ],
+    title: '', description: '',
+    options: [ { id: 'opt-1', label: '' }, { id: 'opt-2', label: '' } ],
     mode: 'github',
-    startsAt: start.toISOString(),
-    endsAt: end.toISOString(),
-    status: 'draft',
-    createdAt: now.toISOString()
-  });
+    startsAt: start.toISOString(), endsAt: end.toISOString(),
+    status: 'draft', createdAt: now.toISOString()
+  } as Poll;
 }
 
 export function AdminPollsPage() {

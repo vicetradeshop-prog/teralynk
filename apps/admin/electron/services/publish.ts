@@ -270,7 +270,7 @@ export async function publishRelease(
 
     /* 9. Vérification des assets sur GitHub */
     step('verify-assets');
-    const afterUpload = await getReleaseByTag(token, conflictingTag);
+    const afterUpload = (await listReleases(token)).find((r) => r.id === draft.id) ?? null;
     const remoteNames = new Set((afterUpload?.assets ?? []).map((a) => a.name));
     const missingAssets = files.filter((f) => !remoteNames.has(f.name)).map((f) => f.name);
     if (missingAssets.length > 0) {

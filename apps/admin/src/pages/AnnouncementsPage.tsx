@@ -35,15 +35,12 @@ const PRIORITY_LABELS: Record<string, string> = {
 };
 
 function emptyAnnouncement(): Announcement {
-  return announcementSchema.parse({
+  return {
     id: `a-${Date.now().toString(36)}`,
-    title: '',
-    summary: '',
-    body: '',
-    category: 'general',
-    priority: 'normal',
-    publishedAt: new Date().toISOString()
-  });
+    title: '', summary: '', body: '',
+    category: 'general', priority: 'normal',
+    publishedAt: new Date().toISOString(), published: true
+  } as Announcement;
 }
 
 export function AdminAnnouncementsPage() {
