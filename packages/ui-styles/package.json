@@ -1,6 +1,6 @@
 {
   "name": "@teralynk/ui-styles",
-  "version": "1.2.5",
+  "version": "1.3.0",
   "private": true,
   "description": "Design system CSS centralisé de Teralynk (partagé par l'application et l'admin).",
   "exports": {

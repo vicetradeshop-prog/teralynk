@@ -73,7 +73,7 @@ for (const [label, cmd] of steps) {
 
 const EXCLUDED_DIRS = new Set([
   'node_modules', 'dist', 'dist-electron', 'release', 'delivery',
-  '.git', 'keys', 'coverage', '.cache', '.arena', '.turbo', '.vite'
+  '.git', 'keys', 'coverage', '.cache', '.arena', '.turbo', '.vite', 'shots'
 ]);
 const PUBLIC_KEY = path.join('apps', 'teralynk', 'electron', 'signing-public-key.pem');
 

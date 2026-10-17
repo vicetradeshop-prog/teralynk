@@ -179,7 +179,7 @@ export function ReleasesPage() {
         {step === 1 && (
           <motion.div key="s1" initial={{ opacity: 0, x: 16 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -16 }} transition={{ duration: 0.25 }}>
             <div className="wizard-drop">
-              <IconFolder size={34} style={{ marginBottom: 10, color: 'var(--tl-violet-bright)' }} />
+              <IconFolder size={34} style={{ marginBottom: 10, color: 'var(--tl-accent-bright)' }} />
               <h3 style={{ marginBottom: 6 }}>Sélectionner un paquet de publication (.zip)</h3>
               <p className="tl-muted" style={{ fontSize: 'var(--tl-text-sm)', maxWidth: 460, margin: '0 auto 16px' }}>
                 Le ZIP doit contenir à sa racine <span className="tl-mono">teralynk.package.json</span> (métadonnées du paquet)

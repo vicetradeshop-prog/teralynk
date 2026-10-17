@@ -30,6 +30,7 @@ npm install          # workspaces : packages/*, apps/*
 | `npm run gen:keys -- ./keys` | Génère la paire Ed25519 de signature |
 | `node scripts/make-package.mjs <dir> <version> [canal] [min]` | Paquet ZIP de publication |
 | `teralynk-setup.bat` (Windows, administrateur) | Assistants complet : exclusion Defender, fusion de sources, clé publique, `dist`, `make-package`, push Git, lancement de l'admin |
+| `node scripts/shot.mjs` | Captures d'écran DESIGN headless (mock preload injecté uniquement pour les captures ; nécessite `npm i --no-save puppeteer` + Chromium) |
 | `node scripts/make-delivery.mjs <version>` | **Livraison** : typecheck + tests + builds, puis ZIP source versionné (`delivery/teralynk-v<version>.zip`) avec `SHA256SUMS.txt` |
 
 ### Routine de livraison (« à chaque fois »)

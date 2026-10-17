@@ -42,7 +42,7 @@ export function HomePage({ catalog, topAnnouncement, offline, updateInfo, favori
       {/* Bannière : mise à jour disponible */}
       {pendingUpdate && updateInfo.outcome.state === 'optional-update' && (
         <motion.div className="tl-banner" initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} onClick={onShowUpdate} role="button" tabIndex={0} onKeyDown={(e) => e.key === 'Enter' && onShowUpdate()}>
-          <IconSparkles size={26} style={{ color: 'var(--tl-violet-bright)', flex: 'none' }} />
+          <IconSparkles size={26} style={{ color: 'var(--tl-accent-bright)', flex: 'none' }} />
           <div className="tl-banner-content">
             <div className="tl-banner-title">Teralynk {updateInfo.outcome.manifest.latest.version} est disponible</div>
             <div className="tl-banner-summary">{updateInfo.outcome.manifest.latest.title} — cliquez pour voir les nouveautés et mettre à jour.</div>

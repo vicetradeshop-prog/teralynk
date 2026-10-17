@@ -32,7 +32,7 @@
   display: grid; place-items: center;
   background: var(--tl-accent-gradient);
   color: #fff;
-  box-shadow: 0 6px 22px var(--tl-violet-glow), inset 0 1px 0 rgba(255,255,255,0.25);
+  box-shadow: 0 6px 22px var(--tl-accent-glow), inset 0 1px 0 rgba(255,255,255,0.25);
 }
 .admin-login-brand h1 { font-size: 22px; font-weight: 700; letter-spacing: -0.02em; }
 .admin-login-brand p { font-size: var(--tl-text-xs); color: var(--tl-text-faint); text-transform: uppercase; letter-spacing: 0.12em; }

@@ -1,7 +1,7 @@
-Teralynk — livraison source v1.2.5
-Date            : 2026-10-17T10:18:17.947Z
+Teralynk — livraison source v1.3.0
+Date            : 2026-10-17T10:42:45.286Z
 Node            : v20.20.2
-Fichiers livrés : 117
+Fichiers livrés : 118
 
 Vérifications exécutées avant production de ce ZIP :
   [OK] npm run typecheck        (TypeScript strict, 3 packages)

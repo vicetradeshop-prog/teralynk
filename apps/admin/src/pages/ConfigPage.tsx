@@ -149,7 +149,7 @@ export function ConfigPage({ validation, onDisconnect }: Props) {
           </Button>
         </div>
         <div className="tl-poll-mode-note">
-          <IconShield size={14} style={{ verticalAlign: -2, marginRight: 6, color: 'var(--tl-violet-bright)' }} />
+          <IconShield size={14} style={{ verticalAlign: -2, marginRight: 6, color: 'var(--tl-accent-bright)' }} />
           Générez la paire avec <span className="tl-mono">npm run gen:keys -- ./keys</span> à la racine du monorepo.
           La clé PUBLIQUE doit être intégrée à l’application utilisateur
           (<span className="tl-mono">apps/teralynk/electron/signing-public-key.pem</span>) avant sa compilation ;

@@ -159,7 +159,7 @@ export function CardDetailModal({ card, onClose, favorite, onToggleFavorite, onE
       )}
 
       <div className="tl-poll-mode-note" style={{ marginTop: 18, display: 'flex', gap: 10 }}>
-        <IconShield size={16} style={{ flex: 'none', marginTop: 2, color: 'var(--tl-violet-bright)' }} />
+        <IconShield size={16} style={{ flex: 'none', marginTop: 2, color: 'var(--tl-accent-bright)' }} />
         <span>
           Avant toute exécution, Teralynk télécharge le script depuis son origine officielle, vérifie son empreinte
           SHA-256 contre le manifeste publié, vous montre son contenu et exige votre confirmation explicite.
