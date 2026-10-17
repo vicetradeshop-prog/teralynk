@@ -93,36 +93,35 @@ export const FeatureCard = memo(function FeatureCard({ card, favorite, onOpen, o
         <IconHeart size={15} {...(favorite ? { fill: 'currentColor' } : {})} />
       </button>
 
+      <span className="tl-card-shine" aria-hidden />
+
       <div className="tl-card-head">
         <div className="tl-card-icon">
           <CatalogIcon name={card.icon} />
         </div>
-        <div style={{ minWidth: 0 }}>
-          <div className="tl-card-title">{card.name}</div>
-          <div className="tl-card-category">{card.category}{card.version ? ` · v${card.version}` : ''}</div>
+        <div style={{ minWidth: 0, flex: 1 }}>
+          <div className="tl-card-title" title={card.name}>{card.name}</div>
+          <div className="tl-card-category">
+            {card.featured ? '★ ' : ''}{card.category}{card.version ? ` · v${card.version}` : ''}
+          </div>
         </div>
       </div>
 
       <p className="tl-card-desc">{card.description}</p>
 
       {card.status === 'unavailable' && card.unavailableReason && (
-        <p className="tl-faint" style={{ fontSize: 'var(--tl-text-xs)' }}>⚠ {card.unavailableReason}</p>
+        <p className="tl-card-note">⚠ {card.unavailableReason}</p>
       )}
       {card.status === 'soon' && (
-        <p className="tl-faint" style={{ fontSize: 'var(--tl-text-xs)' }}>{card.unavailableReason ?? 'En cours de préparation — exécution désactivée.'}</p>
+        <p className="tl-card-note">{card.unavailableReason ?? 'En cours de préparation — exécution désactivée.'}</p>
       )}
 
-      <div className="tl-card-tags">
-        <Badge kind={statusBadgeKind(card.status)}>{STATUS_LABELS[card.status]}</Badge>
-        {card.tags.slice(0, 3).map((tag) => (
-          <span className="tl-tag" key={tag}>{tag}</span>
-        ))}
-      </div>
-
       <div className="tl-card-foot">
-        <span className="tl-faint" style={{ fontSize: 'var(--tl-text-xs)' }}>
-          {card.platforms.join(' · ')}
-          {card.script && card.script.runtime !== 'info' ? ` · ${card.script.runtime}` : ''}
+        <span className="tl-card-tags">
+          <Badge kind={statusBadgeKind(card.status)}>{STATUS_LABELS[card.status]}</Badge>
+          {card.tags.slice(0, 2).map((tag) => (
+            <span className="tl-tag" key={tag}>{tag}</span>
+          ))}
         </span>
         <span className="tl-card-action">
           {isCardNative(card) ? (

@@ -1,0 +1,61 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <defs>
+    <linearGradient id="tile" x1="0" y1="0" x2="1024" y2="1024" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#13131f"/>
+      <stop offset="0.55" stop-color="#0b0b13"/>
+      <stop offset="1" stop-color="#0a0a10"/>
+    </linearGradient>
+    <radialGradient id="vig" cx="0.5" cy="0.3" r="0.8">
+      <stop offset="0" stop-color="#8b5cf6" stop-opacity="0.30"/>
+      <stop offset="0.55" stop-color="#8b5cf6" stop-opacity="0.08"/>
+      <stop offset="1" stop-color="#000000" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="hex" x1="218" y1="172" x2="806" y2="852" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#a78bfa"/>
+      <stop offset="0.45" stop-color="#8b5cf6"/>
+      <stop offset="1" stop-color="#38bdf8"/>
+    </linearGradient>
+    <linearGradient id="beam" x1="452" y1="452" x2="572" y2="572" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#c4b5fd"/>
+      <stop offset="1" stop-color="#7dd3fc"/>
+    </linearGradient>
+    <radialGradient id="nodeA" cx="0.35" cy="0.3" r="0.95">
+      <stop offset="0" stop-color="#e9d5ff"/>
+      <stop offset="0.45" stop-color="#a78bfa"/>
+      <stop offset="1" stop-color="#7c3aed"/>
+    </radialGradient>
+    <radialGradient id="nodeB" cx="0.35" cy="0.3" r="0.95">
+      <stop offset="0" stop-color="#cffafe"/>
+      <stop offset="0.45" stop-color="#67e8f9"/>
+      <stop offset="1" stop-color="#0891b2"/>
+    </radialGradient>
+    <filter id="glow" x="-60%" y="-60%" width="220%" height="220%">
+      <feGaussianBlur stdDeviation="26"/>
+    </filter>
+  </defs>
+
+  <rect width="1024" height="1024" rx="230" fill="url(#tile)"/>
+  <rect width="1024" height="1024" rx="230" fill="url(#vig)"/>
+
+  <!-- halo néon derrière l'emblème -->
+  <g filter="url(#glow)" opacity="0.55">
+    <path d="M512 172 L806 342 L806 682 L512 852 L218 682 L218 342 Z" fill="none" stroke="url(#hex)" stroke-width="112" stroke-linejoin="round"/>
+    <circle cx="400" cy="400" r="86" fill="#8b5cf6"/>
+    <circle cx="624" cy="624" r="86" fill="#38bdf8"/>
+  </g>
+
+  <!-- hexagone de verre -->
+  <path d="M512 172 L806 342 L806 682 L512 852 L218 682 L218 342 Z" fill="none" stroke="url(#hex)" stroke-width="86" stroke-linejoin="round"/>
+  <path d="M512 196 L776 348" stroke="#ffffff" stroke-width="24" stroke-linecap="round" opacity="0.38"/>
+
+  <!-- faisceau + nœuds -->
+  <line x1="452" y1="452" x2="572" y2="572" stroke="url(#beam)" stroke-width="62" stroke-linecap="round"/>
+  <circle cx="400" cy="400" r="84" fill="url(#nodeA)"/>
+  <circle cx="372" cy="372" r="25" fill="#ffffff" opacity="0.9"/>
+  <circle cx="624" cy="624" r="84" fill="url(#nodeB)"/>
+  <circle cx="596" cy="596" r="25" fill="#ffffff" opacity="0.9"/>
+
+  <!-- étincelles -->
+  <circle cx="702" cy="298" r="14" fill="#7dd3fc" opacity="0.9"/>
+  <circle cx="318" cy="714" r="11" fill="#c4b5fd" opacity="0.85"/>
+</svg>

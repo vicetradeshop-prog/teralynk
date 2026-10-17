@@ -235,7 +235,8 @@ export function UpdateGate({ onGatePassed }: Props) {
                 {downloaded && !installing && (
                   <p className="tl-gate-message" style={{ color: 'var(--tl-success)' }}>
                     Version {downloaded} téléchargée et vérifiée. Cliquez sur « Installer et redémarrer » :
-                    Teralynk se ferme, l’installateur s’exécute, puis l’application rouvre ce contrôle de version.
+                    l’installation est entièrement automatique (silencieuse, sans assistant ni « suivant »),
+                    Teralynk se ferme puis se rouvre seul sur ce contrôle de version.
                   </p>
                 )}
 

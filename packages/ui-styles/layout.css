@@ -339,3 +339,120 @@
 .tl-accent-violet { background: linear-gradient(135deg, #7c67ff, #5541d4); }
 .tl-accent-blue { background: linear-gradient(135deg, #4cc3f7, #1d84b5); }
 .tl-accent-iridescent { background: linear-gradient(120deg, #c26bff, #6e56f8, #38bdf8); }
+
+/* ==================================================================
+   v1.6.0 — navigation et interfaces « premium animé »
+   (règles additionnelles : elles surchargent la base sans la casser)
+   ================================================================== */
+
+/* Sidebar : fond dégradé profond + aurora douce en haut */
+.tl-sidebar {
+  background:
+    radial-gradient(420px 260px at 20% -6%, rgba(139, 92, 246, 0.16), transparent 62%),
+    radial-gradient(360px 300px at 90% 108%, rgba(56, 189, 248, 0.1), transparent 60%),
+    linear-gradient(180deg, #0b0c14, #090a10 60%, #0a0b12);
+  border-right: 1px solid rgba(139, 92, 246, 0.16);
+}
+
+/* Marque : halo pulsant autour du socle du logo */
+.tl-brand-mark {
+  animation: tl-brand-breathe 3.2s var(--tl-ease-soft) infinite;
+}
+@keyframes tl-brand-breathe {
+  0%, 100% { box-shadow: 0 3px 12px var(--tl-accent-glow), inset 0 1px 0 rgba(255, 255, 255, 0.25); }
+  50% { box-shadow: 0 3px 22px rgba(139, 92, 246, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.35); }
+}
+.tl-brand-name {
+  background: linear-gradient(92deg, #fff 20%, #c4b5fd 60%, #7dd3fc 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Items de navigation : glissement + icône lumineuse */
+.tl-nav-item {
+  transition: color var(--tl-dur-fast), background var(--tl-dur-fast) var(--tl-ease),
+    transform 0.2s var(--tl-ease);
+}
+.tl-nav-item:hover { transform: translateX(3px); }
+.tl-nav-item:hover svg { filter: drop-shadow(0 0 6px rgba(139, 92, 246, 0.8)); }
+.tl-nav-item.is-active svg { filter: drop-shadow(0 0 7px rgba(139, 92, 246, 0.9)); }
+.tl-nav-pill {
+  background: linear-gradient(100deg, rgba(139, 92, 246, 0.22), rgba(56, 189, 248, 0.1));
+  border: 1px solid rgba(139, 92, 246, 0.35);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 4px 16px rgba(139, 92, 246, 0.18);
+}
+.tl-nav-item.is-active::before {
+  background: linear-gradient(180deg, #8b5cf6, #38bdf8);
+  box-shadow: 0 0 10px rgba(139, 92, 246, 0.8);
+  height: 22px;
+}
+.tl-nav-item.is-active .tl-nav-badge {
+  background: linear-gradient(120deg, #8b5cf6, #6366f1);
+  border-color: rgba(139, 92, 246, 0.7);
+}
+
+/* Séparateurs et captions : présence lumineuse discrète */
+.tl-nav-sep { background: linear-gradient(90deg, transparent, rgba(139, 92, 246, 0.35), transparent); height: 1px; border: 0; }
+.tl-nav-caption { color: rgba(196, 181, 253, 0.55); }
+
+/* Pied de sidebar : pilule de version à anneau dégradé animé */
+.tl-version-pill {
+  position: relative;
+  border-color: transparent;
+  background: linear-gradient(#0c0d15, #0c0d15) padding-box,
+    linear-gradient(120deg, rgba(139, 92, 246, 0.7), rgba(56, 189, 248, 0.7), rgba(139, 92, 246, 0.7)) border-box;
+  border: 1px solid transparent;
+  background-size: 100% 100%, 220% 100%;
+  animation: tl-pill-border 5s linear infinite;
+}
+@keyframes tl-pill-border {
+  0% { background-position: 0 0, 0% 0; }
+  100% { background-position: 0 0, 220% 0; }
+}
+.tl-version-pill .dot { animation: tl-dot-pulse 2s var(--tl-ease-soft) infinite; }
+
+/* Topbar : verre + liseré dégradé animé sous la barre */
+.tl-topbar {
+  position: relative;
+  background: rgba(10, 11, 18, 0.72);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(139, 92, 246, 0.14);
+}
+.tl-topbar::after {
+  content: '';
+  position: absolute;
+  left: 0; right: 0; bottom: -1px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(139, 92, 246, 0.8), rgba(56, 189, 248, 0.8), transparent);
+  background-size: 220% 100%;
+  animation: tl-pill-border 6s linear infinite;
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+/* Titres de page : dégradé subtil + entrée animée gérée par le shell */
+.tl-page-title {
+  background: linear-gradient(94deg, #ffffff 30%, #c7d2fe 70%, #a5f3fc 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Zone principale : scrollbar fine assortie */
+.tl-main {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(139, 92, 246, 0.5) rgba(255, 255, 255, 0.05);
+}
+.tl-main::-webkit-scrollbar { width: 10px; }
+.tl-main::-webkit-scrollbar-track { background: transparent; }
+.tl-main::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, rgba(139, 92, 246, 0.6), rgba(56, 189, 248, 0.55));
+  border-radius: 999px;
+  border: 2px solid rgba(7, 7, 12, 0.8);
+}
+.tl-main::-webkit-scrollbar-thumb:hover { background: linear-gradient(180deg, #8b5cf6, #38bdf8); }
+
+/* Sélection de texte assortie à la marque */
+::selection { background: rgba(139, 92, 246, 0.45); color: #fff; }

@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <defs>
+    <linearGradient id="tile" x1="0" y1="0" x2="1024" y2="1024" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#160f1e"/>
+      <stop offset="0.55" stop-color="#0d0a14"/>
+      <stop offset="1" stop-color="#0b0910"/>
+    </linearGradient>
+    <radialGradient id="vig" cx="0.5" cy="0.3" r="0.8">
+      <stop offset="0" stop-color="#d946ef" stop-opacity="0.28"/>
+      <stop offset="0.55" stop-color="#d946ef" stop-opacity="0.07"/>
+      <stop offset="1" stop-color="#000000" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="hex" x1="218" y1="172" x2="806" y2="852" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#c084fc"/>
+      <stop offset="0.5" stop-color="#a855f7"/>
+      <stop offset="1" stop-color="#ec4899"/>
+    </linearGradient>
+    <linearGradient id="aGrad" x1="362" y1="322" x2="662" y2="702" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#f5d0fe"/>
+      <stop offset="1" stop-color="#f9a8d4"/>
+    </linearGradient>
+    <filter id="glow" x="-60%" y="-60%" width="220%" height="220%">
+      <feGaussianBlur stdDeviation="26"/>
+    </filter>
+  </defs>
+
+  <rect width="1024" height="1024" rx="230" fill="url(#tile)"/>
+  <rect width="1024" height="1024" rx="230" fill="url(#vig)"/>
+
+  <g filter="url(#glow)" opacity="0.5">
+    <path d="M512 172 L806 342 L806 682 L512 852 L218 682 L218 342 Z" fill="none" stroke="url(#hex)" stroke-width="112" stroke-linejoin="round"/>
+    <path d="M372 690 L512 330 L652 690" fill="none" stroke="#ec4899" stroke-width="100" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+
+  <path d="M512 172 L806 342 L806 682 L512 852 L218 682 L218 342 Z" fill="none" stroke="url(#hex)" stroke-width="86" stroke-linejoin="round"/>
+  <path d="M512 196 L776 348" stroke="#ffffff" stroke-width="24" stroke-linecap="round" opacity="0.38"/>
+
+  <path d="M372 690 L512 330 L652 690" fill="none" stroke="url(#aGrad)" stroke-width="84" stroke-linecap="round" stroke-linejoin="round"/>
+  <line x1="438" y1="560" x2="586" y2="560" stroke="url(#aGrad)" stroke-width="72" stroke-linecap="round"/>
+
+  <circle cx="702" cy="298" r="14" fill="#f9a8d4" opacity="0.9"/>
+  <circle cx="318" cy="714" r="11" fill="#e9d5ff" opacity="0.85"/>
+</svg>

@@ -105,10 +105,15 @@
   border: 1px solid var(--tl-line);
 }
 
-/* ---------------- Cartes de fonctionnalité ---------------- */
+/* ---------------- Cartes de fonctionnalité — v1.6.0 ----------------
+   Toutes les cartes ont EXACTEMENT la même taille (grille à rangées 1fr +
+   hauteur 100 % + description clampée sur 2 lignes + pied aimanté en bas).
+   Design premium : fond dégradé, anneau lumineux au survol, reflet qui suit
+   le curseur, balayage brillant, icône sur socle dégradé, entrée en cascade. */
 .tl-card-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(296px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(288px, 1fr));
+  grid-auto-rows: 1fr;
   gap: var(--tl-space-4);
 }
 
@@ -116,72 +121,128 @@
   position: relative;
   display: flex;
   flex-direction: column;
-  gap: var(--tl-space-3);
-  padding: 20px;
-  border-radius: var(--tl-radius-lg);
-  background: var(--tl-surface-1);
+  gap: 12px;
+  height: 100%;
+  min-height: 236px;
+  padding: 18px 18px 16px;
+  border-radius: 16px;
+  background:
+    linear-gradient(168deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.014) 55%),
+    var(--tl-surface-1);
   border: 1px solid var(--tl-line);
   cursor: pointer;
   overflow: hidden;
   box-shadow: var(--tl-shadow-sm);
-  transition: transform var(--tl-dur-base) var(--tl-ease), box-shadow var(--tl-dur-base) var(--tl-ease),
-    border-color var(--tl-dur-base) var(--tl-ease), background var(--tl-dur-base) var(--tl-ease);
+  transition: transform 0.28s var(--tl-ease), box-shadow 0.28s var(--tl-ease),
+    border-color 0.28s var(--tl-ease), background 0.28s var(--tl-ease);
 }
+/* Reflet radial qui suit le curseur */
 .tl-feature-card::before {
   content: '';
   position: absolute;
   inset: 0;
-  background: radial-gradient(380px circle at var(--mx, 50%) var(--my, 0%), rgba(110, 86, 248, calc(0.07 * var(--tl-effect-opacity))), transparent 48%);
+  background: radial-gradient(420px circle at var(--mx, 50%) var(--my, 0%), rgba(139, 92, 246, calc(0.13 * var(--tl-effect-opacity))), transparent 52%);
   opacity: 0;
   transition: opacity var(--tl-dur-base) var(--tl-ease);
   pointer-events: none;
+  z-index: 1;
+}
+/* Balayage brillant diagonal au survol */
+.tl-card-shine {
+  position: absolute;
+  top: -70%; left: -80%;
+  width: 55%; height: 240%;
+  background: linear-gradient(100deg, transparent, rgba(255, 255, 255, 0.14), transparent);
+  transform: rotate(14deg) translateX(0);
+  opacity: 0;
+  pointer-events: none;
+  z-index: 1;
+}
+.tl-feature-card:hover .tl-card-shine {
+  opacity: 1;
+  animation: tl-card-sweep 0.9s var(--tl-ease-soft);
+}
+@keyframes tl-card-sweep {
+  from { transform: rotate(14deg) translateX(-40%); }
+  to { transform: rotate(14deg) translateX(420%); }
 }
 .tl-feature-card:hover {
-  transform: translateY(-3px);
-  background: var(--tl-surface-2);
-  border-color: rgba(110, 86, 248, 0.42);
-  box-shadow: var(--tl-shadow-md), 0 8px 30px rgba(110, 86, 248, calc(0.08 * var(--tl-effect-opacity)));
+  transform: translateY(-5px);
+  border-color: rgba(139, 92, 246, 0.55);
+  box-shadow:
+    var(--tl-shadow-md),
+    0 14px 40px rgba(139, 92, 246, calc(0.16 * var(--tl-effect-opacity))),
+    inset 0 1px 0 rgba(255, 255, 255, 0.07);
 }
 .tl-feature-card:hover::before { opacity: 1; }
-.tl-feature-card:active { transform: translateY(-1px) scale(0.997); }
-.tl-feature-card.is-disabled { cursor: default; opacity: 0.72; }
-.tl-feature-card.is-disabled:hover { transform: none; background: var(--tl-surface-1); border-color: var(--tl-line); box-shadow: var(--tl-shadow-sm); }
+.tl-feature-card:active { transform: translateY(-2px) scale(0.985); }
+.tl-feature-card.is-disabled { cursor: default; opacity: 0.66; filter: saturate(0.7); }
+.tl-feature-card.is-disabled:hover {
+  transform: translateY(-2px);
+  border-color: var(--tl-line-strong);
+  box-shadow: var(--tl-shadow-sm);
+}
 
-/* Mise en avant : liseré supérieur discret */
-.tl-feature-card.is-featured { border-color: rgba(110, 86, 248, 0.3); }
+/* Mise en avant : anneau dégradé animé autour de la carte */
+.tl-feature-card.is-featured { border-color: transparent; }
 .tl-feature-card.is-featured::after {
   content: '';
   position: absolute;
-  top: 0; left: 20px; right: 20px;
-  height: 2px;
-  border-radius: 0 0 3px 3px;
-  background: linear-gradient(90deg, transparent, var(--tl-accent), transparent);
-  opacity: 0.75;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1.5px;
+  background: linear-gradient(130deg, #8b5cf6, #38bdf8, #8b5cf6);
+  background-size: 220% 220%;
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  animation: tl-ring-flow 4.5s linear infinite;
   pointer-events: none;
 }
+@keyframes tl-ring-flow {
+  0% { background-position: 0% 50%; }
+  100% { background-position: 220% 50%; }
+}
 
-.tl-card-head { display: flex; align-items: flex-start; gap: var(--tl-space-3); }
+.tl-card-head { display: flex; align-items: center; gap: 12px; }
 .tl-card-icon {
-  width: 42px; height: 42px; flex: none;
+  width: 44px; height: 44px; flex: none;
   display: grid; place-items: center;
-  border-radius: 11px;
-  background: var(--tl-surface-3);
-  border: 1px solid var(--tl-line-strong);
+  border-radius: 12px;
+  background: linear-gradient(145deg, var(--tl-accent-soft), rgba(56, 189, 248, 0.1));
+  border: 1px solid rgba(139, 92, 246, 0.35);
   color: var(--tl-accent-bright);
-  transition: border-color var(--tl-dur-base) var(--tl-ease), box-shadow var(--tl-dur-base) var(--tl-ease);
+  transition: border-color var(--tl-dur-base) var(--tl-ease), box-shadow var(--tl-dur-base) var(--tl-ease),
+    transform var(--tl-dur-base) var(--tl-ease);
 }
 .tl-feature-card:hover .tl-card-icon {
-  border-color: rgba(110, 86, 248, 0.5);
-  box-shadow: 0 0 0 3px var(--tl-accent-soft);
+  border-color: rgba(139, 92, 246, 0.65);
+  box-shadow: 0 0 0 4px var(--tl-accent-soft), 0 4px 18px rgba(139, 92, 246, 0.35);
+  transform: scale(1.06) rotate(-3deg);
 }
 .tl-card-icon svg { width: 21px; height: 21px; }
-.tl-card-title { font-size: var(--tl-text-base); font-weight: 650; letter-spacing: -0.01em; color: var(--tl-text); }
-.tl-card-category { font-size: var(--tl-text-xs); color: var(--tl-text-faint); text-transform: uppercase; letter-spacing: 0.08em; margin-top: 2px; }
-.tl-card-desc { color: var(--tl-text-dim); font-size: var(--tl-text-sm); line-height: 1.55; flex: 1; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
-.tl-card-foot { display: flex; align-items: center; justify-content: space-between; gap: var(--tl-space-2); margin-top: var(--tl-space-1); }
-.tl-card-tags { display: flex; flex-wrap: wrap; gap: 5px; }
-.tl-card-action { opacity: 0.75; transition: opacity var(--tl-dur-base) var(--tl-ease); }
-.tl-feature-card:hover .tl-card-action { opacity: 1; }
+.tl-card-title {
+  font-size: var(--tl-text-base); font-weight: 680; letter-spacing: -0.012em; color: var(--tl-text);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.tl-card-category { font-size: var(--tl-text-xs); color: var(--tl-text-faint); text-transform: uppercase; letter-spacing: 0.09em; margin-top: 2px; }
+/* Description clampée à 2 lignes : hauteur identique partout */
+.tl-card-desc {
+  color: var(--tl-text-dim); font-size: var(--tl-text-sm); line-height: 1.55;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+  min-height: calc(2 * 1.55 * var(--tl-text-sm));
+}
+.tl-card-note { font-size: var(--tl-text-xs); color: var(--tl-text-faint); }
+/* Pied aimanté : quelles que soient les lignes au-dessus, le pied est en bas */
+.tl-card-foot {
+  margin-top: auto;
+  display: flex; align-items: center; justify-content: space-between; gap: var(--tl-space-2);
+  padding-top: 10px;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+.tl-card-tags { display: flex; flex-wrap: nowrap; gap: 5px; overflow: hidden; }
+.tl-card-action { opacity: 0.8; transition: opacity var(--tl-dur-base) var(--tl-ease), transform var(--tl-dur-base) var(--tl-ease); }
+.tl-feature-card:hover .tl-card-action { opacity: 1; transform: translateX(2px); }
 
 .tl-card-fav {
   position: absolute; top: 12px; right: 12px;
@@ -194,8 +255,8 @@
   transition: color var(--tl-dur-fast), border-color var(--tl-dur-fast), transform var(--tl-dur-fast) var(--tl-ease);
   z-index: 2;
 }
-.tl-card-fav:hover { color: var(--tl-warning); transform: scale(1.1); border-color: rgba(251, 191, 36, 0.4); }
-.tl-card-fav.is-fav { color: var(--tl-warning); border-color: rgba(251, 191, 36, 0.5); }
+.tl-card-fav:hover { color: var(--tl-warning); transform: scale(1.15) rotate(8deg); border-color: rgba(251, 191, 36, 0.4); }
+.tl-card-fav.is-fav { color: var(--tl-warning); border-color: rgba(251, 191, 36, 0.5); background: rgba(251, 191, 36, 0.12); }
 
 /* ---------------- Recherche ---------------- */
 .tl-search {
@@ -766,3 +827,23 @@
    au-dessus (fond décoratif uniquement, pointer-events: none). */
 .tl-modal-head, .tl-modal-body, .tl-modal-foot { position: relative; z-index: 1; }
 .tl-modal-body > .tl-music-stage { position: absolute; inset: 0; z-index: 0; }
+
+/* CORRECTION v1.6.0 — scroll molette dans les modales :
+   sans min-height:0, un enfant flex ne peut pas descendre sous la hauteur de
+   son contenu (min-height:auto) : le corps de la modale débordait et était
+   rogné par overflow:hidden SANS jamais devenir un conteneur scrollable.
+   Résultat : impossible de scroller à la molette dans les fiches cartes. */
+.tl-modal-body {
+  min-height: 0;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(139, 92, 246, 0.55) rgba(255, 255, 255, 0.06);
+}
+.tl-modal-body::-webkit-scrollbar { width: 9px; }
+.tl-modal-body::-webkit-scrollbar-track { background: rgba(255, 255, 255, 0.04); }
+.tl-modal-body::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, rgba(139, 92, 246, 0.65), rgba(56, 189, 248, 0.65));
+  border-radius: 999px;
+  border: 2px solid rgba(0, 0, 0, 0.35);
+}
+.tl-modal-body::-webkit-scrollbar-thumb:hover { background: linear-gradient(180deg, #8b5cf6, #38bdf8); }

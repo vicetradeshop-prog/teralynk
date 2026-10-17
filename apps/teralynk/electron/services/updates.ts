@@ -380,7 +380,13 @@ export function installDownloadedUpdate(window: BrowserWindow): { ok: boolean; e
 
   const attempt = (silent: boolean) => {
     try {
-      updater.quitAndInstall(silent, true);
+      // v1.6.0 : TOUJOURS silencieux (isSilent=true → NSIS /S). L'installateur
+      // réutilise le répertoire d'installation existant, ne montre AUCUN
+      // assistant (« suivant, suivant ») et relance l'app automatiquement
+      // (isForceRunAfter=true). Le paramètre `silent` ne sert plus qu'au
+      // logging du watchdog.
+      updater.quitAndInstall(true, true);
+      log('info', `quitAndInstall lancé (tentative silencieuse=${silent})`);
     } catch (error) {
       log('error', 'quitAndInstall a levé une exception', { reason: (error as Error).message });
     }
