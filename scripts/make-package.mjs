@@ -54,9 +54,24 @@ const entries = readdirSync(dir).filter((name) => {
   return statSync(full).isFile();
 });
 
-const installer = entries.find((name) => /^Teralynk-Setup-.*\.exe$/i.test(name));
+const installer = entries.find((name) => name === `Teralynk-Setup-${version}.exe`) ?? entries.find((name) => /^Teralynk-Setup-.*\.exe$/i.test(name));
 const updaterManifest = entries.find((name) => name === 'latest.yml' || name === 'latest-beta.yml');
 
+if (installer && !installer.includes(`-${version}`)) {
+  console.error(`INCOHÉRENCE : l'installateur présent (${installer}) ne correspond pas à la version demandée (${version}).`);
+  console.error('Le dossier release contient un build PÉRIMÉ. Supprimez-le avant de reconstruire :');
+  console.error(`  rmdir /s /q "${dir}"   puis   npm run dist -w @teralynk/app`);
+  process.exit(1);
+}
+if (updaterManifest) {
+  const yml = readFileSync(path.join(dir, updaterManifest), 'utf8');
+  const m = /^version:\s*(.+)$/m.exec(yml);
+  if (m && m[1].trim() !== version) {
+    console.error(`INCOHÉRENCE : ${updaterManifest} indique la version ${m[1].trim()} au lieu de ${version}.`);
+    console.error('Build périmé dans release/ : supprimez le dossier release puis relancez npm run dist.');
+    process.exit(1);
+  }
+}
 if (!installer) {
   console.error('Aucun installateur détecté (Teralynk-Setup-*.exe).');
   console.error(`Contenu du dossier : ${entries.join(', ') || '(vide)'}`);

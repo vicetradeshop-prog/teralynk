@@ -218,6 +218,15 @@ export async function runUpdateGate(channelOverride?: ReleaseChannel): Promise<U
 /* Téléchargement et installation (electron-updater)                    */
 /* ------------------------------------------------------------------ */
 
+interface ElectronAutoUpdater {
+  autoDownload: boolean;
+  autoInstallOnAppQuit: boolean;
+  on<T>(event: string, listener: (arg: T) => void): unknown;
+  setFeedURL(url: unknown): void;
+  downloadUpdate(): Promise<unknown>;
+  quitAndInstall(): void;
+}
+
 export interface DownloadProgress {
   percent: number;
   bytesPerSecond: number;
@@ -241,7 +250,21 @@ export async function downloadAndInstallUpdate(window: BrowserWindow): Promise<{
   }
   try {
     // Import dynamique : electron-updater n'est utile qu'en mode empaqueté.
-    const { autoUpdater } = await import('electron-updater');
+    // Résolution défensive : certaines configurations d'empaquetage (monorepos,
+    // hoisting) peuvent exposer un module sans autoUpdater — on le détecte et
+    // on renvoie un message actionnable au lieu d'un crash cryptique.
+    const mod = (await import('electron-updater')) as unknown as {
+      autoUpdater?: ElectronAutoUpdater;
+      default?: { autoUpdater?: ElectronAutoUpdater };
+      AppUpdater?: new () => ElectronAutoUpdater;
+    };
+    const autoUpdater = mod.autoUpdater ?? mod.default?.autoUpdater ?? (mod.AppUpdater ? new mod.AppUpdater() : undefined);
+    if (!autoUpdater) {
+      return {
+        started: false,
+        error: 'Le module de mise à jour automatique est introuvable dans cette installation. Téléchargez manuellement la dernière version depuis la page officielle des versions (bouton ci-dessous), puis relancez l’application installée.'
+      };
+    }
     autoUpdater.autoDownload = false;
     autoUpdater.autoInstallOnAppQuit = true;
     // Source unique de vérité : le flux de téléchargement est forcé depuis le

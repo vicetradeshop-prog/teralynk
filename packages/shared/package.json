@@ -1,6 +1,6 @@
 {
   "name": "@teralynk/shared",
-  "version": "1.2.1",
+  "version": "1.2.5",
   "private": true,
   "description": "Contrats de données, versionnement et utilitaires partagés entre Teralynk et Teralynk Admin.",
   "main": "./src/index.ts",
