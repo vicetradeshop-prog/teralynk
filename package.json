@@ -1,6 +1,6 @@
 {
   "name": "teralynk-monorepo",
-  "version": "1.4.0",
+  "version": "1.4.1",
   "private": true,
   "description": "Teralynk — application desktop premium distribuée via GitHub, et son panel d'administration indépendant.",
   "workspaces": [

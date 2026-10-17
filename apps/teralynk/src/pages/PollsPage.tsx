@@ -11,7 +11,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { describePollParticipation, isPollParticipable, pollWindowState, type Poll, type PollsManifest } from '@teralynk/shared';
 import { Badge, Button, EmptyState, ErrorState, Modal } from '@/components/ui';
-import { IconCheck, IconExternal, IconPoll, IconUser } from '@/components/Icons';
+import { IconCheck, IconExternal, IconPoll, IconRefresh, IconUser } from '@/components/Icons';
 import { api, type PollResultsView, type PrefsView } from '@/lib/api';
 import { useToast } from '@/components/Toasts';
 import type { ContentState } from '@/hooks/useData';
@@ -120,7 +120,17 @@ export function PollsPage({ polls, prefs, onPrefsChange }: Props) {
         </p>
       </div>
 
-      {polls.error && <ErrorState title="Sondages inaccessibles" message={polls.error.message} detail={polls.error.detail} onRetry={polls.reload} />}
+      {polls.error && polls.error.kind === 'not-published' && (
+        <EmptyState
+          icon={<IconPoll size={30} />}
+          title="Aucun sondage publié"
+          message="Les consultations officielles apparaîtront ici dès leur publication depuis Teralynk Admin."
+          action={<Button variant="secondary" icon={<IconRefresh size={14} />} onClick={polls.reload}>Rechercher maintenant</Button>}
+        />
+      )}
+      {polls.error && polls.error.kind !== 'not-published' && (
+        <ErrorState title="Sondages inaccessibles" message={polls.error.message} detail={polls.error.detail} onRetry={polls.reload} />
+      )}
 
       {!polls.error && polls.loading && <div className="tl-col"><span className="tl-spinner" style={{ margin: '40px auto' }} /></div>}
 

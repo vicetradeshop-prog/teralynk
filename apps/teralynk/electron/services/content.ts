@@ -24,6 +24,7 @@ import {
   type AnnouncementsManifest,
   type PollsManifest
 } from '@teralynk/shared';
+import { classifyContentFetchError, contentIssueMessage } from '@teralynk/shared';
 import { verifyManifestSignature } from '@teralynk/shared/node';
 import { fetchText, fetchWithRetry, NetworkError } from './net';
 import { embeddedPublicKey } from './signing';
@@ -41,7 +42,7 @@ export interface ContentResult<T> {
 export class ContentError extends Error {
   constructor(
     message: string,
-    readonly kind: 'offline' | 'invalid' | 'http',
+    readonly kind: 'offline' | 'invalid' | 'http' | 'not-published',
     readonly detail?: string
   ) {
     super(message);
@@ -154,14 +155,8 @@ async function loadManifest<T>(name: string, url: string, schema: z.ZodType<T, z
     }
     if (error instanceof ContentError) throw error;
     if (error instanceof NetworkError) {
-      const offline = error.cause === 'offline' || error.cause === 'timeout';
-      throw new ContentError(
-        offline
-          ? 'GitHub est inaccessible et aucune donnée locale valide n’est disponible.'
-          : `Impossible de charger ${name} depuis GitHub.`,
-        offline ? 'offline' : 'http',
-        error.message
-      );
+      const issue = classifyContentFetchError(error.cause, error.status);
+      throw new ContentError(contentIssueMessage(issue, name), issue, error.message);
     }
     throw error;
   }

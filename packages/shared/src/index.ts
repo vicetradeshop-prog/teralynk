@@ -10,3 +10,4 @@ export * from './zip-safety';
 export * from './redact';
 export * from './polls';
 export * from './spotify';
+export * from './content-errors';

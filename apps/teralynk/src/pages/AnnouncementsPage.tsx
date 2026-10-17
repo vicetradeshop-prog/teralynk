@@ -7,7 +7,7 @@ import { useMemo, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import type { Announcement, AnnouncementsManifest } from '@teralynk/shared';
 import { Badge, Button, EmptyState, ErrorState, Modal } from '@/components/ui';
-import { IconExternal, IconMegaphone } from '@/components/Icons';
+import { IconExternal, IconMegaphone, IconRefresh } from '@/components/Icons';
 import { api } from '@/lib/api';
 import type { ContentState } from '@/hooks/useData';
 
@@ -72,7 +72,15 @@ export function AnnouncementsPage({ announcements, initialDetail, onConsumeIniti
         </p>
       </div>
 
-      {announcements.error && (
+      {announcements.error && announcements.error.kind === 'not-published' && (
+        <EmptyState
+          icon={<IconMegaphone size={30} />}
+          title="Aucune annonce publiée"
+          message="Les annonces officielles apparaîtront ici dès leur première publication depuis Teralynk Admin."
+          action={<Button variant="secondary" icon={<IconRefresh size={14} />} onClick={announcements.reload}>Rechercher maintenant</Button>}
+        />
+      )}
+      {announcements.error && announcements.error.kind !== 'not-published' && (
         <ErrorState title="Annonces inaccessibles" message={announcements.error.message} detail={announcements.error.detail} onRetry={announcements.reload} />
       )}
 

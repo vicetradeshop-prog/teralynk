@@ -139,8 +139,17 @@ export function HomePage({ catalog, topAnnouncement, offline, updateInfo, favori
         </div>
       </motion.section>
 
-      {/* État d'erreur du catalogue */}
-      {catalog.error && !catalog.loading && (
+      {/* État du catalogue : vide propre si rien n'est encore publié */}
+      {catalog.error && !catalog.loading && catalog.error.kind === 'not-published' && (
+        <div className="tl-glass" style={{ padding: 8, marginBottom: 24 }}>
+          <EmptyState
+            icon={<IconSparkles size={30} />}
+            title="Bienvenue — catalogue en attente de publication"
+            message="Aucune carte n’a encore été publiée sur le dépôt officiel. La première publication depuis Teralynk Admin remplira cet écran automatiquement."
+          />
+        </div>
+      )}
+      {catalog.error && !catalog.loading && catalog.error.kind !== 'not-published' && (
         <div className="tl-glass" style={{ padding: 8, marginBottom: 24 }}>
           <ErrorState
             title="Catalogue inaccessible"

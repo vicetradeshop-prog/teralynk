@@ -5,8 +5,8 @@
 import { useMemo } from 'react';
 import type { CardStatus, CatalogManifest, FeatureCard, Platform } from '@teralynk/shared';
 import { FeatureCard as FeatureCardView } from '@/components/FeatureCard';
-import { EmptyState, ErrorState } from '@/components/ui';
-import { IconCompass, IconSearch } from '@/components/Icons';
+import { Button, EmptyState, ErrorState } from '@/components/ui';
+import { IconCompass, IconRefresh, IconSearch } from '@/components/Icons';
 import { categoriesOf, filterCatalog, type SortMode } from '@/lib/search';
 import type { ContentState } from '@/hooks/useData';
 
@@ -77,7 +77,15 @@ export function ExplorePage({ catalog, query, filters, onFiltersChange, favorite
         </p>
       </div>
 
-      {catalog.error && (
+      {catalog.error && catalog.error.kind === 'not-published' && (
+        <EmptyState
+          icon={<IconCompass size={30} />}
+          title="Catalogue pas encore publié"
+          message="Le dépôt officiel ne contient aucun catalogue pour l’instant. Dès sa première publication depuis Teralynk Admin, les cartes apparaîtront ici automatiquement — sans réinstallation."
+          action={<Button variant="secondary" icon={<IconRefresh size={14} />} onClick={catalog.reload}>Rechercher maintenant</Button>}
+        />
+      )}
+      {catalog.error && catalog.error.kind !== 'not-published' && (
         <ErrorState title="Catalogue inaccessible" message={catalog.error.message} detail={catalog.error.detail} onRetry={catalog.reload} />
       )}
 
