@@ -121,7 +121,9 @@ export interface PrefsView {
 export interface MusicStatusView {
   python: boolean;
   pythonVersion?: string;
+  pythonPath?: string;
   spotdl: boolean;
+  spotdlVersion?: string;
   ffmpeg: boolean;
   ffmpegSource?: 'system' | 'managed';
   ffmpegPath?: string;

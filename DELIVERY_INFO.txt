@@ -1,8 +1,8 @@
-Teralynk — livraison source v1.5.0
-Date            : 2026-10-17T12:41:44.774Z
+Teralynk — livraison source v1.5.1
+Date            : 2026-10-17T12:58:27.324Z
 Node            : v20.20.2
-Fichiers livrés : 132
-README version  : README-v1.5.0.md (changelog + procédure de publication)
+Fichiers livrés : 133
+README version  : README-v1.5.1.md (changelog + procédure de publication)
 
 Vérifications exécutées avant production de ce ZIP :
   [OK] npm run typecheck        (TypeScript strict, 3 packages)

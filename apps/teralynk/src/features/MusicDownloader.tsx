@@ -337,6 +337,7 @@ export function MusicDownloader({ card, onClose }: Props) {
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3, delay: 0.02 }}
+          title={status?.pythonPath ?? undefined}
         >
           <div className="tl-dep-head">
             <span className="tl-dep-ico"><IconTerminal size={16} /></span>
@@ -374,7 +375,9 @@ export function MusicDownloader({ card, onClose }: Props) {
             <span className={`tl-dep-dot ${status?.spotdl ? 'is-ok' : depInstall === 'spotdl' ? 'is-wait' : 'is-off'}`} />
           </div>
           <p className="tl-dep-sub">
-            {status?.spotdl ? 'Prêt (pip utilisateur)' : 'Moteur de téléchargement Spotify → MP3'}
+            {status?.spotdl
+              ? `Prêt${status.spotdlVersion ? ` · v${status.spotdlVersion}` : ''} (pip utilisateur)`
+              : 'Moteur de téléchargement Spotify → MP3'}
           </p>
           {status && !status.spotdl && depInstall !== 'spotdl' && (
             <>

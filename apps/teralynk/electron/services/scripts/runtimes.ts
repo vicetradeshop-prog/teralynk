@@ -102,7 +102,7 @@ export async function detectRuntimes(force = false): Promise<RuntimeInfo[]> {
   return cached;
 }
 
-export async function findRuntime(id: RuntimeId): Promise<RuntimeInfo | null> {
-  const all = await detectRuntimes();
+export async function findRuntime(id: RuntimeId, force = false): Promise<RuntimeInfo | null> {
+  const all = await detectRuntimes(force);
   return all.find((r) => r.id === id && r.detected) ?? null;
 }

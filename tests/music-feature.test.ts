@@ -4,9 +4,31 @@
  * à interface native (featureUi).
  */
 import { describe, expect, it } from 'vitest';
+import { readFileSync } from 'node:fs';
+import path from 'node:path';
 import { validateSpotifyUrl, featureCardSchema } from '@teralynk/shared';
 
 const NOW = '2025-06-01T10:00:00.000Z';
+
+/**
+ * Régression v1.5.1 : spotdl est installé via `pip install --user`, donc dans
+ * le site-packages UTILISATEUR. Le mode isolé de Python (`-I`) exclut ce
+ * site-packages de sys.path : sonder ou exécuter spotdl avec `-I` le rendait
+ * invisible même correctement installé (bug de la 1.5.0). Aucun `-I` ne doit
+ * réapparaître dans le service musique.
+ */
+describe('service spotdl — pas de mode isolé -I', () => {
+  const source = readFileSync(path.join(__dirname, '..', 'apps', 'teralynk', 'electron', 'services', 'music', 'spotdl.ts'), 'utf8');
+
+  it("n'invoque jamais python avec -I (exclurait le site user de pip)", () => {
+    expect(source).not.toContain("'-I'");
+  });
+
+  it('sonde le module via importlib.util.find_spec (détection fiable et rapide)', () => {
+    expect(source).toContain('importlib.util');
+    expect(source).toContain('find_spec');
+  });
+});
 
 describe('validateSpotifyUrl', () => {
   it('accepte un lien track https open.spotify.com', () => {

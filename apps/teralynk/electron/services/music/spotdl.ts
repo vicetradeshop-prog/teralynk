@@ -46,13 +46,30 @@ export interface MusicEvent {
 export interface MusicStatus {
   python: boolean;
   pythonVersion?: string;
+  /** Chemin de l'exécutable Python réellement utilisé (transparence multi-Python). */
+  pythonPath?: string;
   spotdl: boolean;
+  /** Version du module spotdl installé (métadonnées pip, lecture rapide). */
+  spotdlVersion?: string;
   ffmpeg: boolean;
   /** Provenance de ffmpeg : PATH système ou build local géré par Teralynk. */
   ffmpegSource?: 'system' | 'managed';
   ffmpegPath?: string;
   platform: string;
 }
+
+/**
+ * Détection de présence d'un module Python SANS l'importer (rapide et fiable).
+ *
+ * CORRECTION v1.5.1 : les sondages utilisaient `python -I -m spotdl …`.
+ * Or `-I` (mode isolé) EXCLUT le site-packages utilisateur de sys.path —
+ * exactement l'endroit où `pip install --user` installe spotdl. Résultat :
+ * pip annonçait « Successfully installed » et Teralynk continuait de voir
+ * spotdl comme absent (et l'exécution aurait échoué pareillement).
+ * On sonde donc le module via importlib.util.find_spec, sans `-I`.
+ */
+const FIND_SPOTDL_CMD = 'import importlib.util as u; raise SystemExit(0 if u.find_spec("spotdl") else 1)';
+const SPOTDL_VERSION_CMD = "import importlib.metadata as m; print(m.version('spotdl'))";
 
 /** Build statique Windows officiel (releases GitHub BtbN/FFmpeg-Builds, LGPL : inclut libmp3lame). */
 const FFMPEG_BUILD_URL = 'https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/ffmpeg-master-latest-win64-lgpl.zip';
@@ -146,10 +163,32 @@ function probe(exe: string, args: string[], timeoutMs = 20000): Promise<boolean>
 
 /** État réel de l'environnement (python / spotdl / ffmpeg). */
 export async function musicStatus(): Promise<MusicStatus> {
-  const python = await findRuntime('python');
-  const status: MusicStatus = { python: Boolean(python), pythonVersion: python?.version, spotdl: false, ffmpeg: false, platform: os.platform() };
+  // force=true : un Python installé APRÈS le lancement de l'app doit être vu
+  // dès le prochain « Revérifier » (le cache de détection est rafraîchi).
+  const python = await findRuntime('python', true);
+  const status: MusicStatus = {
+    python: Boolean(python),
+    pythonVersion: python?.version,
+    pythonPath: python?.executablePath,
+    spotdl: false,
+    ffmpeg: false,
+    platform: os.platform()
+  };
   if (python?.executablePath) {
-    status.spotdl = await probe(python.executablePath, ['-I', '-m', 'spotdl', '--version']);
+    status.spotdl = await probe(python.executablePath, ['-c', FIND_SPOTDL_CMD], 15000);
+    if (status.spotdl) {
+      try {
+        const { stdout } = await execFileAsync(python.executablePath, ['-c', SPOTDL_VERSION_CMD], {
+          timeout: 15000,
+          windowsHide: true,
+          env: cleanEnv()
+        });
+        const version = stdout.trim().split(/\r?\n/)[0];
+        if (version) status.spotdlVersion = version.slice(0, 40);
+      } catch {
+        /* version illisible : non bloquant */
+      }
+    }
   }
   const systemFfmpeg = (await which('ffmpeg')) ?? (await which('ffmpeg.exe'));
   if (systemFfmpeg) {
@@ -199,20 +238,35 @@ export async function openFolder(folder: string): Promise<{ ok: boolean; message
 }
 
 /**
- * Installe spotdl (pip --user) avec consentement explicite.
- * Fenêtre masquée, sortie streamée vers l'UI.
+ * Installe spotdl (pip --user) avec consentement explicite — v1.5.1 « intelligent » :
+ *  1. pré-vérification : si le module est déjà présent pour CE Python, rien n'est
+ *     réinstallé (retour immédiat « déjà installé », statut mis à jour) ;
+ *  2. installation SANS mode isolé (`-I` exclus le site user : c'était le bug
+ *     1.5.0) et sans shell, fenêtre masquée, sortie streamée vers l'UI ;
+ *  3. post-vérification par importlib : si pip sort 0 mais que le module reste
+ *     introuvable pour cet exécutable, le message explique la cause probable
+ *     (plusieurs Python installés) au lieu de laisser croire à un succès.
  */
 export async function installSpotdl(window: BrowserWindow, confirmed: boolean): Promise<{ ok: boolean; message?: string }> {
   if (confirmed !== true) return { ok: false, message: 'Consentement explicite requis pour installer spotdl.' };
-  const python: RuntimeInfo | null = await findRuntime('python');
+  const python: RuntimeInfo | null = await findRuntime('python', true);
   if (!python?.executablePath) return { ok: false, message: 'Python 3 est requis pour installer spotdl. Installez-le depuis python.org (cochez « Add to PATH »).' };
 
   const runId = randomUUID();
-  send(window, { runId, type: 'step', step: 'ready', text: 'Installation de spotdl (pip install --user spotdl)…', at: new Date().toISOString() });
-  log('info', 'Installation de spotdl demandée (consentement explicite)');
+  const at = () => new Date().toISOString();
+
+  // 1. Pré-vérification : déjà installé ?
+  if (await probe(python.executablePath, ['-c', FIND_SPOTDL_CMD], 15000)) {
+    send(window, { runId, type: 'step', step: 'done', text: 'spotdl est déjà installé pour ce Python : rien à réinstaller.', at: at() });
+    send(window, { runId, type: 'exit', code: 0, at: at() });
+    return { ok: true, message: 'spotdl était déjà installé : le statut a été mis à jour.' };
+  }
+
+  send(window, { runId, type: 'step', step: 'ready', text: 'Installation de spotdl (pip install --user spotdl)…', at: at() });
+  log('info', 'Installation de spotdl demandée (consentement explicite)', { python: python.executablePath });
 
   return new Promise((resolve) => {
-    const child = spawn(python.executablePath as string, ['-I', '-m', 'pip', 'install', '--user', '--upgrade', 'spotdl'], {
+    const child = spawn(python.executablePath as string, ['-m', 'pip', 'install', '--user', '--upgrade', 'spotdl'], {
       windowsHide: true,
       shell: false,
       env: cleanEnv()
@@ -220,22 +274,32 @@ export async function installSpotdl(window: BrowserWindow, confirmed: boolean): 
     sessions.set(runId, child);
     child.stdout.setEncoding('utf8');
     child.stderr.setEncoding('utf8');
-    child.stdout.on('data', (chunk: string) => send(window, { runId, type: 'line', text: String(chunk), at: new Date().toISOString() }));
-    child.stderr.on('data', (chunk: string) => send(window, { runId, type: 'stderr', text: String(chunk), at: new Date().toISOString() }));
+    child.stdout.on('data', (chunk: string) => send(window, { runId, type: 'line', text: String(chunk), at: at() }));
+    child.stderr.on('data', (chunk: string) => send(window, { runId, type: 'stderr', text: String(chunk), at: at() }));
     child.on('error', (error) => {
       sessions.delete(runId);
-      send(window, { runId, type: 'error', text: error.message, at: new Date().toISOString() });
+      send(window, { runId, type: 'error', text: error.message, at: at() });
       resolve({ ok: false, message: error.message });
     });
-    child.on('close', (code) => {
+    child.on('close', async (code) => {
       sessions.delete(runId);
-      send(window, { runId, type: 'exit', code, at: new Date().toISOString() });
-      if (code === 0) {
-        log('info', 'spotdl installé avec succès');
+      send(window, { runId, type: 'exit', code, at: at() });
+      if (code !== 0) {
+        log('error', `Échec de l'installation de spotdl (code ${code})`);
+        resolve({ ok: false, message: `pip a quitté avec le code ${code}. Vérifiez la connexion Internet et la version de Python (3.8+). Si pip est absent : « python -m ensurepip ».` });
+        return;
+      }
+      // 3. Post-vérification sur le MÊME exécutable que celui utilisé ici.
+      const present = await probe(python.executablePath as string, ['-c', FIND_SPOTDL_CMD], 15000);
+      if (present) {
+        send(window, { runId, type: 'step', step: 'done', text: 'spotdl installé et vérifié pour ce Python.', at: at() });
+        log('info', 'spotdl installé avec succès (module vérifié)');
         resolve({ ok: true });
       } else {
-        log('error', `Échec de l'installation de spotdl (code ${code})`);
-        resolve({ ok: false, message: `pip a quitté avec le code ${code}. Vérifiez la connexion Internet et la version de Python (3.8+).` });
+        const message = `pip a terminé sans erreur mais le module spotdl reste introuvable pour ${python.executablePath}. Cause probable : plusieurs installations Python coexistent et pip a installé ailleurs. Désinstallez les Python superflus ou réouvrez Teralynk après avoir laissé celui-ci premier dans le PATH.`;
+        send(window, { runId, type: 'error', text: message, at: at() });
+        log('error', 'spotdl installé mais module introuvable pour le Python courant', { python: python.executablePath });
+        resolve({ ok: false, message });
       }
     });
   });
@@ -388,7 +452,9 @@ export async function downloadMusic(
 
   const child = spawn(
     python?.executablePath as string,
-    ['-I', '-m', 'spotdl', request.url.trim(), '--output', request.folder],
+    // SANS `-I` : le mode isolé exclurait le site-packages utilisateur où
+    // pip --user a installé spotdl (bug corrigé en v1.5.1).
+    ['-m', 'spotdl', request.url.trim(), '--output', request.folder],
     { windowsHide: true, shell: false, env: cleanEnv(), cwd: request.folder }
   ) as ChildProcessWithoutNullStreams;
   sessions.set(runId, child);
